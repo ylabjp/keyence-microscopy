@@ -66,6 +66,7 @@ def test_stitched_image_initialization():
     assert not meta_info.empty
     assert meta_info["CH"].nunique() == 2  # Two channels
     assert meta_info["fname"].nunique() == 6  # Three images per channel
+    assert stitched_image.get_channels() == ["CH1", "CH3"]
 
 def test_stitched_image_save( tmp_path):
     """Test saving the stitched image."""

@@ -91,7 +91,7 @@ class StichedImage:
     def __init__(self, folder_path):
         self.__canvas_array = None  # type: np.ndarray
         self.__meta_info = None  # type: pd.DataFrame
-
+        self.__channels = None  # type: list
         print(f"Processing folder: {folder_path}")
         self.__nm_per_pixel_values = 0
         # find all TIFF files in specified folder
@@ -103,15 +103,12 @@ class StichedImage:
             f) for f in all_tif_files if "Overlay" not in os.path.basename(f)]
 
         # Identify unique channels
-        channels = sorted(
-            set([os.path.basename(filename).split("_")[-1].replace(".tif", "")
-                for filename in all_tif_files]),
-            key=lambda x: int(re.search(r'CH(\d+)', x).group(1)
-                              ) if re.search(r'CH(\d+)', x) else float('inf')
+        self.__channels = sorted(
+            {re.search(r'CH\d+', f).group() for f in all_tif_files if re.search(r'CH\d+', f)}
         )
 
         meta_info = []
-        for c_idx, channel in enumerate(channels):
+        for c_idx, channel in enumerate(self.__channels):
             print(f"Processing channel: {channel} in folder {folder_path}")
             tif_files = sorted(
                 [f for f in all_tif_files if f.endswith(f"{channel}.tif")])
@@ -161,7 +158,9 @@ class StichedImage:
 
     def get_meta_info(self):
         return self.__meta_info
-
+    def get_channels(self):
+        return self.__channels
+    
     def save(self, output_path):
         # Save the stitched image as a TIFF file
         # Save the stitched image as a TIFF file with ImageJ compatible metadata
