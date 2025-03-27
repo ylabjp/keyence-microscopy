@@ -146,6 +146,7 @@ class StichedImage:
             d["fname"] = tif_files
             meta_info.append(d)
 
+            # add Z stack loop here
             if c_idx == 0:
                 self.__nm_per_pixel_values = ImageMetadata(
                     os.path.join(
@@ -172,6 +173,7 @@ class StichedImage:
             if img.dtype == np.uint16:
                 canvas_array[
                     row["CH_idx"],
+                    # add Z size
                     row["Y_relative"]: row["Y_relative"] + row["H"],
                     row["X_relative"]: row["X_relative"] + row["W"],
                 ] = np.flipud(np.fliplr(img))
@@ -190,7 +192,7 @@ class StichedImage:
         # Save the stitched image as a TIFF file
         # Save the stitched image as a TIFF file with ImageJ compatible metadata
         metadata = {
-            'axes': 'CXY',
+            'axes': 'CYX',  #will be CZYX for Z stack
             'spacing': self.__nm_per_pixel_values / 1000,  # Convert nm to um
             'unit': 'um',
             'finterval': 1.0,
