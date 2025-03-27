@@ -9,6 +9,7 @@ import pandas as pd
 
 SAVE_XML = False
 
+
 class ImageMetadata:
     """
     A class to extract XML data from a TIFF file and parse coordinates (X and Y) and dimensions (width & height).
@@ -85,16 +86,18 @@ class ImageMetadata:
             "LensName": self.lens_name
         }
 
+
 class StichedImage:
     def __init__(self, folder_path):
         self.__canvas_array = None  # type: np.ndarray
         self.__meta_info = None  # type: pd.DataFrame
 
         print(f"Processing folder: {folder_path}")
-        self.__nm_per_pixel_values=0
+        self.__nm_per_pixel_values = 0
         # find all TIFF files in specified folder
         all_tif_files = sorted(
-            glob.glob(os.path.join(folder_path, "Image_*.tif")))
+            glob.glob(os.path.join(folder_path, "Image_*.tif"))
+        )
         # Filter out TIFF files that contain "Overlay" in their filename
         all_tif_files = [os.path.basename(
             f) for f in all_tif_files if "Overlay" not in os.path.basename(f)]
@@ -124,9 +127,9 @@ class StichedImage:
             if c_idx == 0:
                 self.__nm_per_pixel_values = ImageMetadata(
                     os.path.join(
-                    folder_path, all_tif_files[0])
-                    ).nm_per_pixel_values
-                
+                        folder_path, all_tif_files[0])
+                ).nm_per_pixel_values
+
         meta_info = pd.concat(meta_info)
         meta_info["X_relative"] = meta_info["X"]-meta_info["X"].min()
         meta_info["Y_relative"] = meta_info["Y"]-meta_info["Y"].min()
@@ -135,7 +138,7 @@ class StichedImage:
         canvas_width = meta_info["X_relative"].max() + meta_info["W"].max()
         canvas_height = meta_info["Y_relative"].max() + meta_info["H"].max()
         canvas_array = np.zeros(
-            ( meta_info["CH_idx"].nunique(),canvas_height,canvas_width),
+            (meta_info["CH_idx"].nunique(), canvas_height, canvas_width),
             dtype=np.uint16
         )  # Merged array for the canvas
 
@@ -155,10 +158,10 @@ class StichedImage:
 
         self.__canvas_array = canvas_array
         self.__meta_info = meta_info
-    
+
     def get_meta_info(self):
         return self.__meta_info
-    
+
     def save(self, output_path):
         # Save the stitched image as a TIFF file
         # Save the stitched image as a TIFF file with ImageJ compatible metadata
@@ -179,5 +182,3 @@ class StichedImage:
             metadata=metadata
         )
         pass
-
-

@@ -7,6 +7,8 @@ import sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
 from keyenceutils.Stich import ImageMetadata, StichedImage
 
+test_data_folder_path = os.path.join(os.path.dirname(__file__),"data","XY01")
+
 @pytest.fixture
 def create_test_tiff(tmp_path):
     """Fixture to create a test TIFF file with XML metadata."""
@@ -31,20 +33,6 @@ def create_test_tiff(tmp_path):
         f.write(xml_content.encode("utf-8"))
     return tiff_path
 
-@pytest.fixture
-def create_test_folder(tmp_path):
-    """Fixture to create a test folder with multiple TIFF files."""
-    folder_path = tmp_path / "test_folder"
-    folder_path.mkdir()
-
-    # Create dummy TIFF files
-    for i in range(3):
-        for ch in range(2):
-            tiff_path = folder_path / f"Image_{i:03d}_CH{ch+1}.tif"
-            img_data = np.random.randint(0, 65535, (512, 512), dtype=np.uint16)
-            imwrite(tiff_path, img_data)
-
-    return folder_path
 
 def test_image_metadata_extraction(create_test_tiff):
     """Test the extraction of metadata from a TIFF file."""
@@ -68,10 +56,10 @@ def test_image_metadata_to_dict(create_test_tiff):
     assert metadata_dict["H"] == 512
     assert metadata_dict["LensName"] == "TestLens 10x"
 
-def test_stitched_image_initialization(create_test_folder):
+def test_stitched_image_initialization():
     """Test the initialization of the StichedImage class."""
-    folder_path = create_test_folder
-    stitched_image = StichedImage(str(folder_path))
+
+    stitched_image = StichedImage(test_data_folder_path)
 
     meta_info = stitched_image.get_meta_info()
     assert isinstance(meta_info, pd.DataFrame)
@@ -79,10 +67,9 @@ def test_stitched_image_initialization(create_test_folder):
     assert meta_info["CH"].nunique() == 2  # Two channels
     assert meta_info["fname"].nunique() == 6  # Three images per channel
 
-def test_stitched_image_save(create_test_folder, tmp_path):
+def test_stitched_image_save( tmp_path):
     """Test saving the stitched image."""
-    folder_path = create_test_folder
-    stitched_image = StichedImage(str(folder_path))
+    stitched_image = StichedImage(test_data_folder_path)
 
     output_path = tmp_path / "stitched_output.tif"
     stitched_image.save(str(output_path))
