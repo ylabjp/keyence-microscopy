@@ -1,0 +1,13 @@
+[project]
+name = "keyenceutils"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "imagecodecs>=2024.12.30",
+    "matplotlib>=3.10.1",
+    "pandas>=2.2.3",
+    "reportlab>=4.3.1",
+    "tiffile>=2018.10.18",
+]
