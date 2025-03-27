@@ -88,6 +88,31 @@ class ImageMetadata:
 
 
 class StichedImage:
+    """
+    StichedImage is a utility class for processing and stitching microscopy images 
+    stored in a folder. It handles multiple channels, extracts metadata, and 
+    creates a stitched image canvas. The class also provides functionality to save 
+    the stitched image with ImageJ-compatible metadata.
+    Attributes:
+        __canvas_array (np.ndarray): A 3D array representing the stitched image 
+            canvas, where each channel is stored as a separate layer.
+        __meta_info (pd.DataFrame): A DataFrame containing metadata for all images, 
+            including their positions, dimensions, and channels.
+        __channels (list): A list of unique channel identifiers found in the images.
+        __nm_per_pixel_values (float): The nanometers per pixel value extracted 
+            from the metadata of the first image.
+    Methods:
+        __init__(folder_path):
+            Initializes the StichedImage object by processing the images in the 
+            specified folder (e.g. XY01), extracting metadata, and creating the stitched canvas.
+        get_meta_info():
+            Returns the metadata DataFrame containing information about the images.
+        get_channels():
+            Returns the list of unique channel identifiers.
+        save(output_path):
+            Saves the stitched image as a TIFF file with ImageJ-compatible metadata.
+    """
+
     def __init__(self, folder_path):
         self.__canvas_array = None  # type: np.ndarray
         self.__meta_info = None  # type: pd.DataFrame
