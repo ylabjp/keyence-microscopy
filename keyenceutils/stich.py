@@ -7,7 +7,7 @@ import numpy as np
 import os
 import pandas as pd
 
-SAVE_XML = False
+SAVE_XML = True
 
 
 class ImageMetadata:
@@ -31,7 +31,7 @@ class ImageMetadata:
         # Read TIFF file as binary
         with open(tif, "rb") as file:
             content = file.read().decode(errors="ignore")   # decode as string
-
+        print(content)
         # Extract XML content from TIFF file (file starts with <Data> and ends with <\Data>)
         match = re.search(r"<Data>.*?</Data>", content, re.DOTALL)
 
@@ -42,6 +42,9 @@ class ImageMetadata:
         if SAVE_XML:
             with open(self.__xml_file, "w", encoding="utf-8") as xml_out:
                 xml_out.write(xml_content)
+
+        else:
+            print(f"XML not saved for {self._xml_file}")
 
         # Parse the XML content directly and extract coordinates and dimensions
         tree = ET.ElementTree(ET.fromstring(xml_content))
@@ -74,8 +77,23 @@ class ImageMetadata:
         else:
             self.lens_name = "LensName not found"
 
+        # Extract ExposureTime from the XML file
+        # <ExposureTime Type="Keyence.Micro.Bio.Common.Utility.KeyValueContainer.ExposureTimeKeyValueContainer, Keyence.Micro.Bio.Common.Utility.KeyValueContainer, Version=1.1.2.14, Culture=neutral, PublicKeyToken=null">
+        #<Numerator Type="System.Int32">1</Numerator>
+        #<Denominator Type="System.Int32">30</Denominator>
+        #<Line Type="System.Int32">761</Line>
+         #</ExposureTime>
+        exposure_time = tree.find('.//ExposureTime')
+        if exposure_time is not None:
+            numerator = exposure_time.find('Numerator')
+            denominator = exposure_time.find('Denominator')
+            if numerator is not None and denominator is not None:
+                self.exposure_time = float(numerator.text) / float(denominator.text)
+            else:
+                self.exposure_time = None
+
     def __str__(self):
-        return f"X: {self.image_positions[0]}, Y: {self.image_positions[1]}, Width: {self.dimensions[0]}, Height: {self.dimensions[1]}, nm_per_pixel: {self.nm_per_pixel_values}, lens_name: {self.lens_name}"
+        return f"X: {self.image_positions[0]}, Y: {self.image_positions[1]}, Width: {self.dimensions[0]}, Height: {self.dimensions[1]}, nm_per_pixel: {self.nm_per_pixel_values}, lens_name: {self.lens_name}, Exposure_Time: {self.exposure_time}"
 
     def get_dict(self):
         return {
@@ -83,7 +101,8 @@ class ImageMetadata:
             "Y": int(self.image_positions[1]/self.nm_per_pixel_values),
             "W": self.dimensions[0],
             "H": self.dimensions[1],
-            "LensName": self.lens_name
+            "LensName": self.lens_name,
+            "ExposureTime": self.exposure_time
         }
 
 
@@ -131,12 +150,16 @@ class StichedImage:
         self.__channels = sorted(
             {re.search(r'CH\d+', f).group() for f in all_tif_files if re.search(r'CH\d+', f)}
         )
-
+        # check for Z stack images
+        zstack_mode = sorted(re.search(r'_Z\d+_', f) for f in all_tif_files)       
         meta_info = []
+        z_max = 0
+       
+
         for c_idx, channel in enumerate(self.__channels):
             print(f"Processing channel: {channel} in folder {folder_path}")
-            tif_files = sorted(
-                [f for f in all_tif_files if f.endswith(f"{channel}.tif")])
+            tif_files = sorted([f for f in all_tif_files if f.endswith(f"{channel}.tif")])
+            
             d = pd.DataFrame(
                 list(map(lambda tif: ImageMetadata(os.path.join(
                     folder_path, tif)).get_dict(), tif_files))
@@ -146,12 +169,19 @@ class StichedImage:
             d["fname"] = tif_files
             meta_info.append(d)
 
-            # add Z stack loop here
+            if zstack_mode:
+                d["Z"] = d["fname"].apply(lambda x: int(re.search(r'_Z(\d+)_', x).group(1)) 
+                                          if re.search(r'_Z(\d+)_', x) else 0)
+                z_max = max(z_max, d["Z"].max()+1)
+
+            else:
+                d["Z"] = 0
+                z_max = 1   
+
+            meta_info.append(d)
+           
             if c_idx == 0:
-                self.__nm_per_pixel_values = ImageMetadata(
-                    os.path.join(
-                        folder_path, all_tif_files[0])
-                ).nm_per_pixel_values
+                self.__nm_per_pixel_values = ImageMetadata(os.path.join( folder_path, all_tif_files[0])).nm_per_pixel_values
 
         meta_info = pd.concat(meta_info)
         meta_info["X_relative"] = meta_info["X"]-meta_info["X"].min()
@@ -160,8 +190,9 @@ class StichedImage:
         # Calculate the position relative to the bottom-right corner of the canvas
         canvas_width = meta_info["X_relative"].max() + meta_info["W"].max()
         canvas_height = meta_info["Y_relative"].max() + meta_info["H"].max()
-        canvas_array = np.zeros(
-            (meta_info["CH_idx"].nunique(), canvas_height, canvas_width),
+
+        # create a canvas with czyx shape
+        canvas_array = np.zeros((meta_info["CH_idx"].nunique(), z_max, canvas_height, canvas_width),
             dtype=np.uint16
         )  # Merged array for the canvas
 
@@ -170,10 +201,11 @@ class StichedImage:
             # print(f"X: {row["X_relative"]}, Y: {row["Y_relative"]}")
             # Open the image and handle different modes
             img = tiff.imread(os.path.join(folder_path, row["fname"]))
-            if img.dtype == np.uint16:
+           
+            if img.dtype == np.uint16:               
                 canvas_array[
                     row["CH_idx"],
-                    # add Z size
+                    row["Z"],
                     row["Y_relative"]: row["Y_relative"] + row["H"],
                     row["X_relative"]: row["X_relative"] + row["W"],
                 ] = np.flipud(np.fliplr(img))
@@ -192,7 +224,7 @@ class StichedImage:
         # Save the stitched image as a TIFF file
         # Save the stitched image as a TIFF file with ImageJ compatible metadata
         metadata = {
-            'axes': 'CYX',  #will be CZYX for Z stack
+            'axes': 'CZYX',  #will be CZYX for Z stack
             'spacing': self.__nm_per_pixel_values / 1000,  # Convert nm to um
             'unit': 'um',
             'finterval': 1.0,
