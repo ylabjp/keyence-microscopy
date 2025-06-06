@@ -28,6 +28,8 @@ class ImageMetadata:
         self.dimensions: tuple[int] = None
         self.nm_per_pixel_values: float = None
         self.lens_name = None
+        self.exposure_time = None
+
         # Read TIFF file as binary
         with open(tif, "rb") as file:
             content = file.read().decode(errors="ignore")   # decode as string
@@ -89,8 +91,7 @@ class ImageMetadata:
             denominator = exposure_time.find('Denominator')
             if numerator is not None and denominator is not None:
                 self.exposure_time = float(numerator.text) / float(denominator.text)
-            else:
-                self.exposure_time = None
+
 
     def __str__(self):
         return f"X: {self.image_positions[0]}, Y: {self.image_positions[1]}, Width: {self.dimensions[0]}, Height: {self.dimensions[1]}, nm_per_pixel: {self.nm_per_pixel_values}, lens_name: {self.lens_name}, Exposure_Time: {self.exposure_time}"
@@ -150,12 +151,17 @@ class StichedImage:
         self.__channels = sorted(
             {re.search(r'CH\d+', f).group() for f in all_tif_files if re.search(r'CH\d+', f)}
         )
+
+        assert all_tif_files is not None, "No TIFF files found in the specified folder."
+        assert len(self.__channels) > 0, "No channels found in the specified folder."
+        assert len(all_tif_files) > 0, "No TIFF files found in the specified folder."
+
         # check for Z stack images
-        zstack_mode = sorted(re.search(r'_Z\d+_', f) for f in all_tif_files)       
+        zstack_mode = all([re.search(r'_Z\d+_', f) is not None for f in all_tif_files])
+            
         meta_info = []
         z_max = 0
        
-
         for c_idx, channel in enumerate(self.__channels):
             print(f"Processing channel: {channel} in folder {folder_path}")
             tif_files = sorted([f for f in all_tif_files if f.endswith(f"{channel}.tif")])

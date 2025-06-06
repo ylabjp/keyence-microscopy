@@ -4,7 +4,6 @@ setup(
     name='keyenceutils',
     version='0.1.0',
     packages=find_packages(),
-    # package_dir={"": "ylabcommon"},
     install_requires=[
         "tifffile",
         "numpy",
