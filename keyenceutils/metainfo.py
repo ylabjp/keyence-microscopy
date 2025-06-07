@@ -92,7 +92,7 @@ class ImageMetadata:
             "W": self.dimensions[0],
             "H": self.dimensions[1],
             "LensName": self.lens_name,
-            "ExposureTime": self.exposure_time,
-            "um_per_pixel": self.nm_per_pixel_values/ 1000,  # Convert nm to um,
+            "ExposureTimeInS": self.exposure_time,
+            "umPerPixel": self.nm_per_pixel_values/ 1000,  # Convert nm to um,
         }
 

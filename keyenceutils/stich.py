@@ -101,10 +101,16 @@ class StichedImage:
         canvas_width = meta_info["X_relative"].max() + meta_info["W"].max()
         canvas_height = meta_info["Y_relative"].max() + meta_info["H"].max()
 
-        # create a canvas with czyx shape
-        canvas_array = np.zeros((meta_info["CH_idx"].nunique(), z_max, canvas_height, canvas_width),
-                                dtype=np.uint16
-                                )  # Merged array for the canvas
+        # create a canvas with zcyx shape
+        canvas_array = np.zeros(
+            (
+                z_max,
+                meta_info["CH_idx"].nunique(),
+                canvas_height,
+                canvas_width
+            ),
+            dtype=np.uint16
+        )  # Merged array for the canvas
 
         for idx, row in meta_info.iterrows():
             print(f"Processing {row['fname']}")
@@ -118,8 +124,8 @@ class StichedImage:
                 raise ValueError("WARNING: not 16 bit image")
 
             canvas_array[
-                row["CH_idx"],
                 row["Z"],
+                row["CH_idx"],
                 row["Y_relative"]: row["Y_relative"] + row["H"],
                 row["X_relative"]: row["X_relative"] + row["W"],
             ] = np.flipud(np.fliplr(img))
@@ -141,20 +147,18 @@ class StichedImage:
         # https://imagej.net/ij/plugins/metadata/MetaData.pdf
 
         metadata = {
-            "Software":"KeyenceUtils by Yagishita Lab",
-            'axes': 'CZYX',
-            'spacing': self.__meta_info["um_per_pixel"].values[0],
+            "Software": "KeyenceUtils by Yagishita Lab",
+            'axes': 'ZCYX',  # ImageJ is only compatible with TZCYXS order
+            'spacing': self.__meta_info["umPerPixel"].values[0],
             'unit': 'um',
             'finterval': 1.0,
             'finterval_unit': 's',
             'hyperstack': True,
             'mode': 'composite',
         }
-        m=self.__meta_info.to_json(orient='records')
-        for k in m.keys():
-            if k not in metadata:
-                metadata[k] = m[k]  
-                
+        for k in ["LensName", "ExposureTimeInS"]:
+            metadata[k] = self.__meta_info[k].values[0]
+
         tiff.imwrite(
             output_path,
             self.__canvas_array,
@@ -162,9 +166,10 @@ class StichedImage:
             metadata=metadata,
             imagej=True,
             resolution=(
-                self.__meta_info["um_per_pixel"].values[0],
-                self.__meta_info["um_per_pixel"].values[0],
-                "um"
-            )
+                self.__meta_info["umPerPixel"].values[0],
+                self.__meta_info["umPerPixel"].values[0],
+                
+            ),
+            resolutionunit=tiff.RESUNIT.MICROMETER
         )
         pass
