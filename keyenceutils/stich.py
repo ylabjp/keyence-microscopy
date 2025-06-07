@@ -145,25 +145,24 @@ class StichedImage:
         # Save the stitched image as a TIFF file
         # Save the stitched image as a TIFF file with ImageJ compatible metadata
         # https://imagej.net/ij/plugins/metadata/MetaData.pdf
-        assert self.__meta_info["umPerPixel"].nunique() == 1, "All images must have the same umPerPixel value."
-        
+        assert self.__meta_info["umPerPixel"].nunique(
+        ) == 1, "All images must have the same umPerPixel value."
+
         description_text = (
-            f"Lens={ self.__meta_info["LensName"].values[0]}\n"
+            f"Lens={self.__meta_info["LensName"].values[0]}\n"
             f"ExposureTime(ms)={self.__meta_info["ExposureTimeInS"].values[0]*1000}\n"
         )
 
         metadata = {
-            "Software": "KeyenceUtils by Yagishita Lab",
+            'Properties': {
+                "Lens": self.__meta_info["LensName"].values[0],
+                "ExposureTime(ms)": self.__meta_info["ExposureTimeInS"].values[0]*1000
+            },
+            'Info': ";".join(description_text),
             'axes': 'ZCYX',  # ImageJ is only compatible with TZCYXS order
-            'spacing': self.__meta_info["umPerPixel"].values[0],
-            'unit': 'um',
-            'finterval': 1.0,
-            'finterval_unit': 's',
             'hyperstack': True,
             'mode': 'composite',
-            'ImageDescription':description_text
         }
-
 
         tiff.imwrite(
             output_path,
@@ -173,7 +172,7 @@ class StichedImage:
             resolution=(
                 self.__meta_info["umPerPixel"].values[0],
                 self.__meta_info["umPerPixel"].values[0],
-                
+
             ),
             resolutionunit=tiff.RESUNIT.MICROMETER,
             metadata=metadata,
