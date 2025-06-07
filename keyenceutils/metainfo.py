@@ -21,7 +21,7 @@ class ImageMetadata:
         self.nm_per_pixel_values: float = None
         self.lens_name = None
         self.exposure_time = None
-
+        self.sectioning = None
         # Read TIFF file as binary
         with open(tif, "rb") as file:
             content = file.read().decode(errors="ignore")   # decode as string
@@ -81,6 +81,29 @@ class ImageMetadata:
             if numerator is not None and denominator is not None:
                 self.exposure_time = float(
                     numerator.text) / float(denominator.text)
+        # Extract Sectioning information
+        #     <Sectioning Type="Keyence.Micro.Bio.Common.Data.Metadata.Conditions.SectioningCondition, Keyence.Micro.Bio.Common.Data.Metadata, Version=1.1.2.14, Culture=neutral, PublicKeyToken=null">
+        #   <Enabled Type="System.Boolean">True</Enabled>
+        #   <SettingType Type="Keyence.Micro.Bio.Common.Data.Types.SectioningSettingType">Custom</SettingType>
+        #   <SlitType Type="Keyence.Micro.Bio.Common.Data.Types.SectioningSlitType">Slit</SlitType>
+        #   <SlitSize Type="System.Int32">1</SlitSize>
+        #   <SlitPitch Type="System.Int32">10</SlitPitch>
+        #   <SlitScanPitch Type="System.Int32">1</SlitScanPitch>
+        # < / Sectioning >
+        sectioning_info = tree.find('.//Sectioning')
+        if sectioning_info is not None:
+            if sectioning_info.find('Enabled').text == "True":
+                self.sectioning = (
+                "SettingType: "+ sectioning_info.find('SettingType').text+
+                "SlitType: "+sectioning_info.find('SlitType').text+
+                "SlitSize: "+ sectioning_info.find('SlitSize').text+
+                "SlitPitch: "+ sectioning_info.find('SlitPitch').text+
+                "SlitScanPitch: " + sectioning_info.find('SlitScanPitch').text
+                )
+
+            else:
+                self.sectioning = "None"
+
 
     def __str__(self):
         return f"X: {self.image_positions[0]}, Y: {self.image_positions[1]}, Width: {self.dimensions[0]}, Height: {self.dimensions[1]}, nm_per_pixel: {self.nm_per_pixel_values}, lens_name: {self.lens_name}, Exposure_Time: {self.exposure_time}"
@@ -93,6 +116,7 @@ class ImageMetadata:
             "H": self.dimensions[1],
             "LensName": self.lens_name,
             "ExposureTimeInS": self.exposure_time,
-            "umPerPixel": self.nm_per_pixel_values/ 1000,  # Convert nm to um,
+            "umPerPixel": self.nm_per_pixel_values / 1000,  # Convert nm to um,
+            "Sectioning": self.sectioning
         }
 

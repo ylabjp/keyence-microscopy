@@ -162,7 +162,8 @@ class StichedImage:
         
         p={
             "Lens": self.__meta_info["LensName"].values[0],
-            "ExposureTime(s)": exp_str
+            "ExposureTime(s)": exp_str,
+            "Sectioning": self.__meta_info["Sectioning"].values[0]
         } | self.__user_metadata
         
         metadata = {
