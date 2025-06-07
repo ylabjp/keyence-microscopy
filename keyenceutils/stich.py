@@ -145,7 +145,7 @@ class StichedImage:
         # Save the stitched image as a TIFF file
         # Save the stitched image as a TIFF file with ImageJ compatible metadata
         # https://imagej.net/ij/plugins/metadata/MetaData.pdf
-        
+
         assert self.__meta_info["umPerPixel"].nunique(
         ) == 1, "All images must have the same umPerPixel value."
         assert self.__meta_info["LensName"].nunique(
@@ -162,7 +162,7 @@ class StichedImage:
             'axes': 'ZCYX',  # ImageJ is only compatible with TZCYXS order
             'hyperstack': True,
             'mode': 'composite',
-            'spacing': self.__meta_info["umPerPixel"].values[0],
+            'spacing': 1.0/self.__meta_info["umPerPixel"].values[0],
             'unit': 'um',
         }
 
