@@ -7,7 +7,7 @@ import numpy as np
 import os
 import pandas as pd
 
-SAVE_XML = True
+SAVE_XML = False
 
 
 class ImageMetadata:
@@ -45,9 +45,6 @@ class ImageMetadata:
             with open(self.__xml_file, "w", encoding="utf-8") as xml_out:
                 xml_out.write(xml_content)
 
-        else:
-            print(f"XML not saved for {self._xml_file}")
-
         # Parse the XML content directly and extract coordinates and dimensions
         tree = ET.ElementTree(ET.fromstring(xml_content))
         region = tree.find('.//XyStageRegion')
@@ -81,17 +78,17 @@ class ImageMetadata:
 
         # Extract ExposureTime from the XML file
         # <ExposureTime Type="Keyence.Micro.Bio.Common.Utility.KeyValueContainer.ExposureTimeKeyValueContainer, Keyence.Micro.Bio.Common.Utility.KeyValueContainer, Version=1.1.2.14, Culture=neutral, PublicKeyToken=null">
-        #<Numerator Type="System.Int32">1</Numerator>
-        #<Denominator Type="System.Int32">30</Denominator>
-        #<Line Type="System.Int32">761</Line>
-         #</ExposureTime>
+        # <Numerator Type="System.Int32">1</Numerator>
+        # <Denominator Type="System.Int32">30</Denominator>
+        # <Line Type="System.Int32">761</Line>
+         # </ExposureTime>
         exposure_time = tree.find('.//ExposureTime')
         if exposure_time is not None:
             numerator = exposure_time.find('Numerator')
             denominator = exposure_time.find('Denominator')
             if numerator is not None and denominator is not None:
-                self.exposure_time = float(numerator.text) / float(denominator.text)
-
+                self.exposure_time = float(
+                    numerator.text) / float(denominator.text)
 
     def __str__(self):
         return f"X: {self.image_positions[0]}, Y: {self.image_positions[1]}, Width: {self.dimensions[0]}, Height: {self.dimensions[1]}, nm_per_pixel: {self.nm_per_pixel_values}, lens_name: {self.lens_name}, Exposure_Time: {self.exposure_time}"
@@ -103,7 +100,8 @@ class ImageMetadata:
             "W": self.dimensions[0],
             "H": self.dimensions[1],
             "LensName": self.lens_name,
-            "ExposureTime": self.exposure_time
+            "ExposureTime": self.exposure_time,
+            "um_per_pixel": self.nm_per_pixel_values/ 1000,  # Convert nm to um,
         }
 
 
@@ -138,7 +136,7 @@ class StichedImage:
         self.__meta_info = None  # type: pd.DataFrame
         self.__channels = None  # type: list
         print(f"Processing folder: {folder_path}")
-        self.__nm_per_pixel_values = 0
+
         # find all TIFF files in specified folder
         all_tif_files = sorted(
             glob.glob(os.path.join(folder_path, "Image_*.tif"))
@@ -149,26 +147,33 @@ class StichedImage:
 
         # Identify unique channels
         self.__channels = sorted(
-            {re.search(r'CH\d+', f).group() for f in all_tif_files if re.search(r'CH\d+', f)}
+            {re.search(r'CH\d+', f).group()
+             for f in all_tif_files if re.search(r'CH\d+', f)}
         )
 
         assert all_tif_files is not None, "No TIFF files found in the specified folder."
-        assert len(self.__channels) > 0, "No channels found in the specified folder."
-        assert len(all_tif_files) > 0, "No TIFF files found in the specified folder."
+        assert len(
+            self.__channels) > 0, "No channels found in the specified folder."
+        assert len(
+            all_tif_files) > 0, "No TIFF files found in the specified folder."
 
         # check for Z stack images
-        zstack_mode = all([re.search(r'_Z\d+_', f) is not None for f in all_tif_files])
-            
+        zstack_mode = all(
+            [re.search(r'_Z\d+_', f) is not None for f in all_tif_files])
+
         meta_info = []
         z_max = 0
-       
+
         for c_idx, channel in enumerate(self.__channels):
             print(f"Processing channel: {channel} in folder {folder_path}")
-            tif_files = sorted([f for f in all_tif_files if f.endswith(f"{channel}.tif")])
-            
+            tif_files = sorted(
+                [f for f in all_tif_files if f.endswith(f"{channel}.tif")])
+
             d = pd.DataFrame(
-                list(map(lambda tif: ImageMetadata(os.path.join(
-                    folder_path, tif)).get_dict(), tif_files))
+                list(map(lambda tif: ImageMetadata(
+                    os.path.join(
+                        folder_path, tif)).get_dict(), tif_files)
+                     )
             )
             d["CH_idx"] = c_idx
             d["CH"] = channel
@@ -176,18 +181,17 @@ class StichedImage:
             meta_info.append(d)
 
             if zstack_mode:
-                d["Z"] = d["fname"].apply(lambda x: int(re.search(r'_Z(\d+)_', x).group(1)) 
+                d["Z"] = d["fname"].apply(lambda x: int(re.search(r'_Z(\d+)_', x).group(1))
                                           if re.search(r'_Z(\d+)_', x) else 0)
                 z_max = max(z_max, d["Z"].max()+1)
 
             else:
                 d["Z"] = 0
-                z_max = 1   
+                z_max = 1
 
             meta_info.append(d)
-           
-            if c_idx == 0:
-                self.__nm_per_pixel_values = ImageMetadata(os.path.join( folder_path, all_tif_files[0])).nm_per_pixel_values
+
+
 
         meta_info = pd.concat(meta_info)
         meta_info["X_relative"] = meta_info["X"]-meta_info["X"].min()
@@ -199,16 +203,16 @@ class StichedImage:
 
         # create a canvas with czyx shape
         canvas_array = np.zeros((meta_info["CH_idx"].nunique(), z_max, canvas_height, canvas_width),
-            dtype=np.uint16
-        )  # Merged array for the canvas
+                                dtype=np.uint16
+                                )  # Merged array for the canvas
 
         for idx, row in meta_info.iterrows():
             print(f"Processing {row['fname']}")
             # print(f"X: {row["X_relative"]}, Y: {row["Y_relative"]}")
             # Open the image and handle different modes
             img = tiff.imread(os.path.join(folder_path, row["fname"]))
-           
-            if img.dtype == np.uint16:               
+
+            if img.dtype == np.uint16:
                 canvas_array[
                     row["CH_idx"],
                     row["Z"],
@@ -217,21 +221,23 @@ class StichedImage:
                 ] = np.flipud(np.fliplr(img))
             else:
                 raise ValueError("WARNING: not 16 bit image")
+            del img  # Free memory
 
         self.__canvas_array = canvas_array
         self.__meta_info = meta_info
 
     def get_meta_info(self):
         return self.__meta_info
+
     def get_channels(self):
         return self.__channels
-    
+
     def save(self, output_path):
         # Save the stitched image as a TIFF file
         # Save the stitched image as a TIFF file with ImageJ compatible metadata
         metadata = {
-            'axes': 'CZYX',  #will be CZYX for Z stack
-            'spacing': self.__nm_per_pixel_values / 1000,  # Convert nm to um
+            'axes': 'CZYX',
+            'spacing': self.__meta_info["um_per_pixel"].values[0], 
             'unit': 'um',
             'finterval': 1.0,
             'finterval_unit': 's',
