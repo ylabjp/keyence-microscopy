@@ -211,16 +211,18 @@ class StichedImage:
             # print(f"X: {row["X_relative"]}, Y: {row["Y_relative"]}")
             # Open the image and handle different modes
             img = tiff.imread(os.path.join(folder_path, row["fname"]))
-
-            if img.dtype == np.uint16:
-                canvas_array[
+            if img.ndim > 2:  # Single channel image
+                raise ValueError("ERROR: multi channel image found, please check the folder")
+            if img.dtype != np.uint16:
+                raise ValueError("WARNING: not 16 bit image")
+            
+            canvas_array[
                     row["CH_idx"],
                     row["Z"],
                     row["Y_relative"]: row["Y_relative"] + row["H"],
                     row["X_relative"]: row["X_relative"] + row["W"],
                 ] = np.flipud(np.fliplr(img))
-            else:
-                raise ValueError("WARNING: not 16 bit image")
+                
             del img  # Free memory
 
         self.__canvas_array = canvas_array
