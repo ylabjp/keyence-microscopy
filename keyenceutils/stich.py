@@ -33,7 +33,7 @@ class ImageMetadata:
         # Read TIFF file as binary
         with open(tif, "rb") as file:
             content = file.read().decode(errors="ignore")   # decode as string
-        print(content)
+        # print(content)
         # Extract XML content from TIFF file (file starts with <Data> and ends with <\Data>)
         match = re.search(r"<Data>.*?</Data>", content, re.DOTALL)
 
