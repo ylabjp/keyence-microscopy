@@ -33,10 +33,12 @@ class StichedImage:
             Saves the stitched image as a TIFF file with ImageJ-compatible metadata.
     """
 
-    def __init__(self, folder_path):
+    def __init__(self, folder_path,user_metadata={}):
         self.__canvas_array = None  # type: np.ndarray
         self.__meta_info = None  # type: pd.DataFrame
         self.__channels = None  # type: list
+        self.__user_metadata = user_metadata # type: dict
+
         print(f"Processing folder: {folder_path}")
 
         # find all TIFF files in specified folder
@@ -156,12 +158,15 @@ class StichedImage:
         exp_str=self.__meta_info.groupby("CH")["ExposureTimeInS"].first().to_string()
 
 
-        res=1.0/ self.__meta_info["umPerPixel"].values[0]
+        res = 1.0 / self.__meta_info["umPerPixel"].values[0]
+        
+        p={
+            "Lens": self.__meta_info["LensName"].values[0],
+            "ExposureTime(s)": exp_str
+        } | self.__user_metadata
+        
         metadata = {
-            'Properties': {
-                "Lens": self.__meta_info["LensName"].values[0],
-                "ExposureTime(s)": exp_str
-            },
+            'Properties': p,
             'axes': 'ZCYX',  # ImageJ is only compatible with TZCYXS order
             'hyperstack': True,
             'mode': 'composite',
