@@ -5,8 +5,8 @@ import pandas as pd
 from tifffile import imwrite
 import sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
-from keyenceutils.stich import ImageMetadata, StichedImage
-
+from keyenceutils.stich import StichedImage
+from keyenceutils.metainfo import ImageMetadata
 test_data_folder_path = os.path.join(os.path.dirname(__file__),"data","XY01")
 
 @pytest.fixture
