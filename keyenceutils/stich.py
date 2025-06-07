@@ -150,14 +150,17 @@ class StichedImage:
         ) == 1, "All images must have the same umPerPixel value."
         assert self.__meta_info["LensName"].nunique(
         ) == 1, "All images must have the same LensName."
-        assert self.__meta_info["ExposureTimeInS"].nunique(
-        ) == 1, "All images must have the same ExposureTimeInS."
+        # Exposure time may vary among channels
+        # assert self.__meta_info["ExposureTimeInS"].nunique(
+        # ) == 1, "All images must have the same ExposureTimeInS."  
+        exp_str=self.__meta_info.groupby("CH")["ExposureTimeInS"].first().to_string()
+
 
         res=1.0/ self.__meta_info["umPerPixel"].values[0]
         metadata = {
             'Properties': {
                 "Lens": self.__meta_info["LensName"].values[0],
-                "ExposureTime(ms)": self.__meta_info["ExposureTimeInS"].values[0]*1000
+                "ExposureTime(s)": exp_str
             },
             'axes': 'ZCYX',  # ImageJ is only compatible with TZCYXS order
             'hyperstack': True,
