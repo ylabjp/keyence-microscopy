@@ -145,6 +145,12 @@ class StichedImage:
         # Save the stitched image as a TIFF file
         # Save the stitched image as a TIFF file with ImageJ compatible metadata
         # https://imagej.net/ij/plugins/metadata/MetaData.pdf
+        assert self.__meta_info["umPerPixel"].nunique() == 1, "All images must have the same umPerPixel value."
+        
+        description_text = (
+            f"Lens={ self.__meta_info["LensName"].values[0]}\n"
+            f"ExposureTime(ms)={self.__meta_info["ExposureTimeInS"].values[0]*1000}\n"
+        )
 
         metadata = {
             "Software": "KeyenceUtils by Yagishita Lab",
@@ -155,21 +161,21 @@ class StichedImage:
             'finterval_unit': 's',
             'hyperstack': True,
             'mode': 'composite',
+            'ImageDescription':description_text
         }
-        for k in ["LensName", "ExposureTimeInS"]:
-            metadata[k] = self.__meta_info[k].values[0]
+
 
         tiff.imwrite(
             output_path,
             self.__canvas_array,
             photometric='minisblack',
-            metadata=metadata,
             imagej=True,
             resolution=(
                 self.__meta_info["umPerPixel"].values[0],
                 self.__meta_info["umPerPixel"].values[0],
                 
             ),
-            resolutionunit=tiff.RESUNIT.MICROMETER
+            resolutionunit=tiff.RESUNIT.MICROMETER,
+            metadata=metadata,
         )
         pass
