@@ -153,7 +153,7 @@ class StichedImage:
         assert self.__meta_info["ExposureTimeInS"].nunique(
         ) == 1, "All images must have the same ExposureTimeInS."
 
-
+        res=1.0/ self.__meta_info["umPerPixel"].values[0]
         metadata = {
             'Properties': {
                 "Lens": self.__meta_info["LensName"].values[0],
@@ -162,7 +162,7 @@ class StichedImage:
             'axes': 'ZCYX',  # ImageJ is only compatible with TZCYXS order
             'hyperstack': True,
             'mode': 'composite',
-            'spacing': 1.0/self.__meta_info["umPerPixel"].values[0],
+            'spacing':res,
             'unit': 'um',
         }
 
@@ -171,10 +171,9 @@ class StichedImage:
             self.__canvas_array,
             photometric='minisblack',
             imagej=True,
-            resolution=(
-                self.__meta_info["umPerPixel"].values[0],
-                self.__meta_info["umPerPixel"].values[0],
-
+            resolution=(     # Number of pixels per `resolutionunit` in X and Y directions
+                res,
+                res,
             ),
             resolutionunit=tiff.RESUNIT.MICROMETER,
             metadata=metadata,
