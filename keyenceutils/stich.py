@@ -6,6 +6,7 @@ import os
 import pandas as pd
 from keyenceutils.metainfo import ImageMetadata
 
+
 class StichedImage:
     """
     StichedImage is a utility class for processing and stitching microscopy images 
@@ -92,8 +93,6 @@ class StichedImage:
 
             meta_info.append(d)
 
-
-
         meta_info = pd.concat(meta_info)
         meta_info["X_relative"] = meta_info["X"]-meta_info["X"].min()
         meta_info["Y_relative"] = meta_info["Y"]-meta_info["Y"].min()
@@ -113,17 +112,18 @@ class StichedImage:
             # Open the image and handle different modes
             img = tiff.imread(os.path.join(folder_path, row["fname"]))
             if img.ndim > 2:  # Single channel image
-                raise ValueError("ERROR: multi channel image found, please check the folder")
+                raise ValueError(
+                    "ERROR: multi channel image found, please check the folder")
             if img.dtype != np.uint16:
                 raise ValueError("WARNING: not 16 bit image")
-            
+
             canvas_array[
-                    row["CH_idx"],
-                    row["Z"],
-                    row["Y_relative"]: row["Y_relative"] + row["H"],
-                    row["X_relative"]: row["X_relative"] + row["W"],
-                ] = np.flipud(np.fliplr(img))
-                
+                row["CH_idx"],
+                row["Z"],
+                row["Y_relative"]: row["Y_relative"] + row["H"],
+                row["X_relative"]: row["X_relative"] + row["W"],
+            ] = np.flipud(np.fliplr(img))
+
             del img  # Free memory
 
         self.__canvas_array = canvas_array
@@ -138,20 +138,33 @@ class StichedImage:
     def save(self, output_path):
         # Save the stitched image as a TIFF file
         # Save the stitched image as a TIFF file with ImageJ compatible metadata
+        # https://imagej.net/ij/plugins/metadata/MetaData.pdf
+
         metadata = {
+            "Software":"KeyenceUtils by Yagishita Lab",
             'axes': 'CZYX',
-            'spacing': self.__meta_info["um_per_pixel"].values[0], 
+            'spacing': self.__meta_info["um_per_pixel"].values[0],
             'unit': 'um',
             'finterval': 1.0,
             'finterval_unit': 's',
             'hyperstack': True,
             'mode': 'composite',
-            'Info': self.__meta_info.to_json(orient='records')
         }
+        m=self.__meta_info.to_json(orient='records')
+        for k in m.keys():
+            if k not in metadata:
+                metadata[k] = m[k]  
+                
         tiff.imwrite(
             output_path,
             self.__canvas_array,
             photometric='minisblack',
-            metadata=metadata
+            metadata=metadata,
+            imagej=True,
+            resolution=(
+                self.__meta_info["um_per_pixel"].values[0],
+                self.__meta_info["um_per_pixel"].values[0],
+                "um"
+            )
         )
         pass
