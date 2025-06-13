@@ -1,6 +1,7 @@
 import xml.etree.ElementTree as ET
 import re
-
+# obtain XML data from a TIFF file
+# grep -a -e"Data" -B0 -A1000 Test_001.tif
 
 class ImageMetadata:
     """

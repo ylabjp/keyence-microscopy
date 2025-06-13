@@ -1,0 +1,106 @@
+<Data>
+  <SingleFileProperty>
+    <Version Type="Keyence.Micro.Bio.Common.Data.Types.MetadataVersion">Bz4</Version>
+    <Image Type="Keyence.Micro.Bio.Common.Data.Metadata.Conditions.ImageCondition, Keyence.Micro.Bio.Common.Data.Metadata, Version=1.1.2.14, Culture=neutral, PublicKeyToken=null">
+      <ShootingDateTime Type="System.Int64">-8584560395503800619</ShootingDateTime>
+      <Comment Type="System.String">
+      </Comment>
+      <OriginalImageSize Type="Keyence.Micro.Bio.Common.Utility.KeyValueContainer.SizeKeyValueContainer, Keyence.Micro.Bio.Common.Utility.KeyValueContainer, Version=1.1.2.14, Culture=neutral, PublicKeyToken=null">
+        <Width Type="System.Int32">1920</Width>
+        <Height Type="System.Int32">1440</Height>
+      </OriginalImageSize>
+      <SavingImageSize Type="Keyence.Micro.Bio.Common.Utility.KeyValueContainer.SizeKeyValueContainer, Keyence.Micro.Bio.Common.Utility.KeyValueContainer, Version=1.1.2.14, Culture=neutral, PublicKeyToken=null">
+        <Width Type="System.Int32">1920</Width>
+        <Height Type="System.Int32">1440</Height>
+      </SavingImageSize>
+      <DigitalZoom Type="System.Int32">100</DigitalZoom>
+      <PowerZoom Type="System.Int32">100</PowerZoom>
+      <LowerDisplayLevel Type="System.Int32">0</LowerDisplayLevel>
+      <UpperDisplayLevel Type="System.Int32">182</UpperDisplayLevel>
+      <Calibration Type="System.Double">4645347642411548585</Calibration>
+      <IsOverlay Type="System.Boolean">False</IsOverlay>
+      <IsFullFocus Type="System.Boolean">False</IsFullFocus>
+      <Focus Type="System.Double">4607477996147318135</Focus>
+      <PatchNumber Type="System.Int32">1</PatchNumber>
+    </Image>
+    <Lens Type="Keyence.Micro.Bio.Common.Data.Metadata.Conditions.LensCondition, Keyence.Micro.Bio.Common.Data.Metadata, Version=1.1.2.14, Culture=neutral, PublicKeyToken=null">
+      <LensName Type="System.String">PlanApo 20x 0.75/0.60mm :Default</LensName>
+      <Comment Type="System.String">Default</Comment>
+      <TypeName Type="System.String">PlanApo</TypeName>
+      <Magnification Type="System.Int32">2000</Magnification>
+      <NumericalAperture Type="System.Double">4604930618986332160</NumericalAperture>
+      <WorkingDistance Type="System.Double">4603579539098121011</WorkingDistance>
+      <LiquidImmersion Type="Keyence.Micro.Bio.Common.Data.Metadata.StoreTypes.LiquidImmersionLensStoreType">None</LiquidImmersion>
+      <PhaseContrast Type="Keyence.Micro.Bio.Common.Data.Metadata.StoreTypes.PhaseContrastLensStoreType">None</PhaseContrast>
+      <RevolverPosition Type="System.Int32">1</RevolverPosition>
+    </Lens>
+    <Shooting Type="Keyence.Micro.Bio.Common.Data.Metadata.Conditions.ShootingCondition, Keyence.Micro.Bio.Common.Data.Metadata, Version=1.1.2.14, Culture=neutral, PublicKeyToken=null">
+      <StageLocationX Type="System.Int32">53968125</StageLocationX>
+      <StageLocationY Type="System.Int32">100580938</StageLocationY>
+      <StageLocationZ Type="System.Int32">2690020</StageLocationZ>
+      <Channel Type="Keyence.Micro.Bio.Common.Data.Types.ChannelType">Channel1</Channel>
+      <Observation Type="Keyence.Micro.Bio.Common.Data.Types.ObservationMode">Fluorescence</Observation>
+      <XyStageRegion Type="Keyence.Micro.Bio.Common.Utility.KeyValueContainer.RectangleKeyValueContainer, Keyence.Micro.Bio.Common.Utility.KeyValueContainer, Version=1.1.2.14, Culture=neutral, PublicKeyToken=null">
+        <X Type="System.Int32">53606000</X>
+        <Y Type="System.Int32">100309000</Y>
+        <Width Type="System.Int32">724688</Width>
+        <Height Type="System.Int32">543516</Height>
+      </XyStageRegion>
+      <Parameter Type="Keyence.Micro.Bio.Common.Data.Metadata.Parameter.ShootingParameter, Keyence.Micro.Bio.Common.Data.Metadata, Version=1.1.2.14, Culture=neutral, PublicKeyToken=null">
+        <PseudoColor Type="Keyence.Micro.Bio.Common.Data.Metadata.StoreTypes.PseudoColorStoreType">White</PseudoColor>
+        <Binnin Type="Keyence.Micro.Bio.Common.Data.Metadata.StoreTypes.BinningStoreType">Off</Binnin>
+        <Roi Type="Keyence.Micro.Bio.Common.Data.Types.RoiType">Off</Roi>
+        <ShootingFast Type="Keyence.Micro.Bio.Common.Data.Metadata.StoreTypes.ShootingFastStoreType">Normal</ShootingFast>
+        <ExposureTime Type="Keyence.Micro.Bio.Common.Utility.KeyValueContainer.ExposureTimeKeyValueContainer, Keyence.Micro.Bio.Common.Utility.KeyValueContainer, Version=1.1.2.14, Culture=neutral, PublicKeyToken=null">
+          <Numerator Type="System.Int32">10</Numerator>
+          <Denominator Type="System.Int32">25</Denominator>
+          <Line Type="System.Int32">9129</Line>
+        </ExposureTime>
+        <PixelMode Type="Keyence.Micro.Bio.Common.Data.Types.PixelModeType">Monochrome16Bit</PixelMode>
+        <CameraGain Type="System.Int32">120</CameraGain>
+        <CameraGainUnit Type="Keyence.Micro.Bio.Common.Data.Metadata.StoreTypes.GainUnitStoreType">Decibel</CameraGainUnit>
+        <CameraHardwareGain Type="System.Int32">336</CameraHardwareGain>
+        <IsoSpeed Type="System.Int32">0</IsoSpeed>
+        <Aperture Type="System.Int32">0</Aperture>
+        <NeutralDensityFilter Type="Keyence.Micro.Bio.Common.Data.Metadata.StoreTypes.NeutralDensityFilterStoreType">None</NeutralDensityFilter>
+        <TransIlluminationRate Type="System.Int32">0</TransIlluminationRate>
+      </Parameter>
+    </Shooting>
+    <ImageCorrection Type="Keyence.Micro.Bio.Common.Data.Metadata.Conditions.ImageCorrectionCondition, Keyence.Micro.Bio.Common.Data.Metadata, Version=1.1.2.14, Culture=neutral, PublicKeyToken=null">
+      <NoiseFilterEnabled Type="System.Boolean">False</NoiseFilterEnabled>
+      <RealtimeFilter Type="Keyence.Micro.Bio.Common.Data.Metadata.StoreTypes.RealtimeFilterStoreType">Off</RealtimeFilter>
+      <HazeReduction Type="Keyence.Micro.Bio.Common.Data.Metadata.StoreTypes.HazeReductionStoreType">Off</HazeReduction>
+      <WhiteBalance Type="Keyence.Micro.Bio.Common.Data.Metadata.Parameter.WhiteBalanceParameter, Keyence.Micro.Bio.Common.Data.Metadata, Version=1.1.2.14, Culture=neutral, PublicKeyToken=null">
+        <OperationType Type="Keyence.Micro.Bio.Common.Data.Types.WhiteBalanceType">Off</OperationType>
+        <Red Type="System.Double">4607182418800017408</Red>
+        <Green Type="System.Double">4607182418800017408</Green>
+        <Blue Type="System.Double">4607182418800017408</Blue>
+      </WhiteBalance>
+      <LookupTable Type="Keyence.Micro.Bio.Common.Data.Metadata.MetaTypes.LookupTableMetaType, Keyence.Micro.Bio.Common.Data.Metadata, Version=1.1.2.14, Culture=neutral, PublicKeyToken=null">
+        <OperationType Type="Keyence.Micro.Bio.Common.Data.Types.LookupTableType">Off</OperationType>
+        <BlackBalance Type="System.Int32">0</BlackBalance>
+        <DistributionParameterCount Type="System.Int32">0</DistributionParameterCount>
+      </LookupTable>
+    </ImageCorrection>
+    <Multipoint Type="Keyence.Micro.Bio.Common.Data.Metadata.Conditions.MultipointCondition, Keyence.Micro.Bio.Common.Data.Metadata, Version=1.1.2.14, Culture=neutral, PublicKeyToken=null">
+      <Enable Type="System.Boolean">True</Enable>
+      <Index Type="System.Int32">2</Index>
+      <DefaultOrigin Type="Keyence.Micro.Bio.Common.Utility.KeyValueContainer.PointKeyValueContainer, Keyence.Micro.Bio.Common.Utility.KeyValueContainer, Version=1.1.2.14, Culture=neutral, PublicKeyToken=null">
+        <X Type="System.Int32">0</X>
+        <Y Type="System.Int32">0</Y>
+      </DefaultOrigin>
+      <Origin Type="Keyence.Micro.Bio.Common.Utility.KeyValueContainer.PointKeyValueContainer, Keyence.Micro.Bio.Common.Utility.KeyValueContainer, Version=1.1.2.14, Culture=neutral, PublicKeyToken=null">
+        <X Type="System.Int32">0</X>
+        <Y Type="System.Int32">0</Y>
+      </Origin>
+    </Multipoint>
+    <Sectioning Type="Keyence.Micro.Bio.Common.Data.Metadata.Conditions.SectioningCondition, Keyence.Micro.Bio.Common.Data.Metadata, Version=1.1.2.14, Culture=neutral, PublicKeyToken=null">
+      <Enabled Type="System.Boolean">True</Enabled>
+      <SettingType Type="Keyence.Micro.Bio.Common.Data.Types.SectioningSettingType">Custom</SettingType>
+      <SlitType Type="Keyence.Micro.Bio.Common.Data.Types.SectioningSlitType">Slit</SlitType>
+      <SlitSize Type="System.Int32">1</SlitSize>
+      <SlitPitch Type="System.Int32">10</SlitPitch>
+      <SlitScanPitch Type="System.Int32">1</SlitScanPitch>
+    </Sectioning>
+  </SingleFileProperty>
+</Data>
