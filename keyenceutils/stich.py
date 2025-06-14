@@ -33,11 +33,11 @@ class StichedImage:
             Saves the stitched image as a TIFF file with ImageJ-compatible metadata.
     """
 
-    def __init__(self, folder_path,user_metadata={}):
+    def __init__(self, folder_path, user_metadata={}):
         self.__canvas_array = None  # type: np.ndarray
         self.__meta_info = None  # type: pd.DataFrame
         self.__channels = None  # type: list
-        self.__user_metadata = user_metadata # type: dict
+        self.__user_metadata = user_metadata  # type: dict
 
         print(f"Processing folder: {folder_path}")
 
@@ -124,13 +124,14 @@ class StichedImage:
                     "ERROR: multi channel image found, please check the folder")
             if img.dtype != np.uint16:
                 raise ValueError("WARNING: not 16 bit image")
-
-            canvas_array[
+            img = np.flipud(np.fliplr(img))
+            selection = (
                 row["Z"],
                 row["CH_idx"],
-                row["Y_relative"]: row["Y_relative"] + row["H"],
-                row["X_relative"]: row["X_relative"] + row["W"],
-            ] = np.flipud(np.fliplr(img))
+                slice(row["Y_relative"], row["Y_relative"] + row["H"]),
+                slice(row["X_relative"], row["X_relative"] + row["W"])
+            )
+            canvas_array[selection]=np.maximum(img,canvas_array[selection])
 
             del img  # Free memory
 
@@ -154,24 +155,24 @@ class StichedImage:
         ) == 1, "All images must have the same LensName."
         # Exposure time may vary among channels
         # assert self.__meta_info["ExposureTimeInS"].nunique(
-        # ) == 1, "All images must have the same ExposureTimeInS."  
-        exp_str=self.__meta_info.groupby("CH")["ExposureTimeInS"].first().to_string()
-
+        # ) == 1, "All images must have the same ExposureTimeInS."
+        exp_str = self.__meta_info.groupby(
+            "CH")["ExposureTimeInS"].first().to_string()
 
         res = 1.0 / self.__meta_info["umPerPixel"].values[0]
-        
-        p={
+
+        p = {
             "Lens": self.__meta_info["LensName"].values[0],
             "ExposureTime(s)": exp_str,
             "Sectioning": self.__meta_info["Sectioning"].values[0]
         } | self.__user_metadata
-        
+
         metadata = {
             'Properties': p,
             'axes': 'ZCYX',  # ImageJ is only compatible with TZCYXS order
             'hyperstack': True,
             'mode': 'composite',
-            'spacing':res,
+            'spacing': res,
             'unit': 'um',
         }
 
