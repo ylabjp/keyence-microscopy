@@ -17,7 +17,7 @@ class Plane:
         assert self.__meta_info["CH"].nunique() == 1, "All images must have the same CH value."
         
         self.images = {
-            row.Index: tiff.imread(os.path.join(folder_path, row.fname)) 
+            row.fname: tiff.imread(os.path.join(folder_path, row.fname)) 
             for _, row in self.__meta_info.iterrows()
         }
         pairwise_shifts = self._calculate_all_pairwise_shifts()
@@ -43,10 +43,10 @@ class Plane:
                 tile2 = right_neighbors.iloc[0]
                 overlap_w = int((tile1.X_relative + tile1.W) - tile2.X_relative)
                 if overlap_w > 10: # 最小オーバーラップ幅
-                    img1_overlap = self.images[tile1.name][:, -overlap_w:]
-                    img2_overlap = self.images[tile2.name][:, :overlap_w]
+                    img1_overlap = self.images[tile1.fname][:, -overlap_w:]
+                    img2_overlap = self.images[tile2.fname][:, :overlap_w]
                     shift, _, _ = phase_cross_correlation(img1_overlap, img2_overlap, upsample_factor=10)
-                    shifts[(tile1.name, tile2.name)] = shift # (dy, dx)
+                    shifts[(tile1.fname, tile2.fname)] = shift # (dy, dx)
             
             # 下隣のタイルを探す
             down_neighbors = sorted_tiles[
@@ -57,10 +57,10 @@ class Plane:
                 tile2 = down_neighbors.iloc[0]
                 overlap_h = int((tile1.Y_relative + tile1.H) - tile2.Y_relative)
                 if overlap_h > 10:
-                    img1_overlap = self.images[tile1.name][-overlap_h:, :]
-                    img2_overlap = self.images[tile2.name][:overlap_h, :]
+                    img1_overlap = self.images[tile1.fname][-overlap_h:, :]
+                    img2_overlap = self.images[tile2.fname][:overlap_h, :]
                     shift, _, _ = phase_cross_correlation(img1_overlap, img2_overlap, upsample_factor=10)
-                    shifts[(tile1.name, tile2.name)] = shift
+                    shifts[(tile1.fname, tile2.fname)] = shift
 
         print(f"{len(shifts)} 個の隣接ペアについてシフトを計算しました。")
         return shifts
@@ -134,44 +134,41 @@ class Plane:
         canvas_H = int(np.ceil(max_y + tile_H - min_y))
         canvas_W = int(np.ceil(max_x + tile_W - min_x))
 
-        # チャンネルごとに処理
-        canvas_list = []
-        for c_idx, channel in enumerate(self.__channels):
-            print(f"チャネル '{channel}' をレンダリング中...")
-            canvas = np.zeros((canvas_H, canvas_W), dtype=np.float32)
-            weight_canvas = np.zeros_like(canvas)
+
+        canvas = np.zeros((canvas_H, canvas_W), dtype=np.float32)
+        weight_canvas = np.zeros_like(canvas)
+        
+        # ブレンディング用の重みマップ (全タイルで共通)
+        weight_map = distance_transform_edt(np.ones((tile_H, tile_W), dtype=np.float32))
+        weight_map /= np.max(weight_map)
+
+
+        for idx, row in self.__meta_info.iterrows():
+            if idx not in final_positions: continue
             
-            # ブレンディング用の重みマップ (全タイルで共通)
-            weight_map = distance_transform_edt(np.ones((tile_H, tile_W), dtype=np.float32))
-            weight_map /= np.max(weight_map)
+            img = self.images[row.fname].astype(np.float32)
+            # 元のコードにあった反転処理を適用
+            img = np.flipud(np.fliplr(img))
 
-            channel_tiles = self.__meta_info[self.__meta_info.CH_idx == c_idx]
-            for idx, row in channel_tiles.iterrows():
-                if idx not in final_positions: continue
-                
-                img = self.images[idx].astype(np.float32)
-                # 元のコードにあった反転処理を適用
-                img = np.flipud(np.fliplr(img))
+            y_start_f, x_start_f = final_positions[idx]
+            # 全体がマイナスにならないようにオフセット
+            y_start = int(round(y_start_f - min_y))
+            x_start = int(round(x_start_f - min_x))
 
-                y_start_f, x_start_f = final_positions[idx]
-                # 全体がマイナスにならないようにオフセット
-                y_start = int(round(y_start_f - min_y))
-                x_start = int(round(x_start_f - min_x))
+            if y_start < 0 or x_start < 0 or (y_start + tile_H > canvas_H) or (x_start + tile_W > canvas_W):
+                continue
 
-                if y_start < 0 or x_start < 0 or (y_start + tile_H > canvas_H) or (x_start + tile_W > canvas_W):
-                    continue
+            # 線形ブレンディング
+            roi = canvas[y_start : y_start + tile_H, x_start : x_start + tile_W]
+            roi += img * weight_map
+            weight_canvas[y_start : y_start + tile_H, x_start : x_start + tile_W] += weight_map
 
-                # 線形ブレンディング
-                roi = canvas[y_start : y_start + tile_H, x_start : x_start + tile_W]
-                roi += img * weight_map
-                weight_canvas[y_start : y_start + tile_H, x_start : x_start + tile_W] += weight_map
+        # 正規化
+        canvas /= np.maximum(weight_canvas, 1e-6)
 
-            # 正規化
-            canvas /= np.maximum(weight_canvas, 1e-6)
-            canvas_list.append(canvas.astype(np.uint16))
         
         # (Z, C, Y, X) の形にスタックする
-        return np.stack(canvas_list, axis=0)[np.newaxis, :, :, :]
+        return canvas
 
 class StichedImage:
     """
@@ -280,26 +277,16 @@ class StichedImage:
             dtype=np.uint16
         )  # Merged array for the canvas
 
-        for idx, row in meta_info.iterrows():
-            print(f"Processing {row['fname']}")
-            # print(f"X: {row["X_relative"]}, Y: {row["Y_relative"]}")
-            # Open the image and handle different modes
-            img = tiff.imread(os.path.join(folder_path, row["fname"]))
-            if img.ndim > 2:  # Single channel image
-                raise ValueError(
-                    "ERROR: multi channel image found, please check the folder")
-            if img.dtype != np.uint16:
-                raise ValueError("WARNING: not 16 bit image")
-            img = np.flipud(np.fliplr(img))
-            selection = (
-                row["Z"],
-                row["CH_idx"],
-                slice(row["Y_relative"], row["Y_relative"] + row["H"]),
-                slice(row["X_relative"], row["X_relative"] + row["W"])
-            )
-            canvas_array[selection]=np.maximum(img,canvas_array[selection])
+        for label, group in meta_info.groupby(["Z","CH_idx"]):
 
-            del img  # Free memory
+            img = Plane(group, folder_path).canvas_array[0]
+
+            selection = (
+                label[0],
+                label[1],
+            )
+            canvas_array[selection]=img
+
 
         self.__canvas_array = canvas_array
         self.__meta_info = meta_info
