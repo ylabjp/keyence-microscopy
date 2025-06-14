@@ -5,7 +5,173 @@ import numpy as np
 import os
 import pandas as pd
 from keyenceutils.metainfo import ImageMetadata
+from skimage.registration import phase_cross_correlation
+from scipy.ndimage import distance_transform_edt
+from collections import deque
 
+class Plane:
+    def __init__(self, meta_info:pd.DataFrame,folder_path):
+
+        self.__meta_info = meta_info    # type: pd.DataFrame
+        assert self.__meta_info["Z"].nunique() == 1, "All images must be in the same Z plane."
+        assert self.__meta_info["CH"].nunique() == 1, "All images must have the same CH value."
+        
+        self.images = {
+            row.Index: tiff.imread(os.path.join(folder_path, row.fname)) 
+            for _, row in self.__meta_info.iterrows()
+        }
+        pairwise_shifts = self._calculate_all_pairwise_shifts()
+        final_positions = self._determine_final_positions(pairwise_shifts)
+        self.canvas_array = self._render_final_image(final_positions)
+
+    def _calculate_all_pairwise_shifts(self):
+        """
+        ステップ2: 隣接するタイル間の高精度なピクセル単位のズレを計算する
+        """
+        print("ステップ2: 隣接タイル間のピクセルシフト計算を開始...")
+        shifts = {}
+        # 効率化のため、タイルを位置でソート
+        sorted_tiles = self.__meta_info.sort_values(by=['Y_relative', 'X_relative'])
+
+        for i, tile1 in sorted_tiles.iterrows():
+            # 右隣のタイルを探す
+            right_neighbors = sorted_tiles[
+                (abs(tile1.Y_relative - sorted_tiles.Y_relative) < tile1.H / 2) &
+                (sorted_tiles.X_relative > tile1.X_relative)
+            ]
+            if not right_neighbors.empty:
+                tile2 = right_neighbors.iloc[0]
+                overlap_w = int((tile1.X_relative + tile1.W) - tile2.X_relative)
+                if overlap_w > 10: # 最小オーバーラップ幅
+                    img1_overlap = self.images[tile1.name][:, -overlap_w:]
+                    img2_overlap = self.images[tile2.name][:, :overlap_w]
+                    shift, _, _ = phase_cross_correlation(img1_overlap, img2_overlap, upsample_factor=10)
+                    shifts[(tile1.name, tile2.name)] = shift # (dy, dx)
+            
+            # 下隣のタイルを探す
+            down_neighbors = sorted_tiles[
+                (abs(tile1.X_relative - sorted_tiles.X_relative) < tile1.W / 2) &
+                (sorted_tiles.Y_relative > tile1.Y_relative)
+            ]
+            if not down_neighbors.empty:
+                tile2 = down_neighbors.iloc[0]
+                overlap_h = int((tile1.Y_relative + tile1.H) - tile2.Y_relative)
+                if overlap_h > 10:
+                    img1_overlap = self.images[tile1.name][-overlap_h:, :]
+                    img2_overlap = self.images[tile2.name][:overlap_h, :]
+                    shift, _, _ = phase_cross_correlation(img1_overlap, img2_overlap, upsample_factor=10)
+                    shifts[(tile1.name, tile2.name)] = shift
+
+        print(f"{len(shifts)} 個の隣接ペアについてシフトを計算しました。")
+        return shifts
+
+    def _determine_final_positions(self, pairwise_shifts):
+        """
+        ステップ3: 計算したズレを元に、全タイルの最終的な絶対座標を決定する
+        """
+        print("ステップ3: 全タイルの最終座標の計算を開始...")
+        # 最初のタイルをアンカー（基準）とする
+        anchor_idx = self.__meta_info.sort_values(by=['Y_relative', 'X_relative']).index[0]
+        
+        final_positions = {anchor_idx: (self.__meta_info.loc[anchor_idx, "Y_relative"], 
+                                        self.__meta_info.loc[anchor_idx, "X_relative"])}
+        
+        # 幅優先探索で位置を伝播させる
+        q = deque([anchor_idx])
+        processed = {anchor_idx}
+
+        while q:
+            current_idx = q.popleft()
+            
+            # 隣接ペアを見つけてキューに追加
+            for (idx1, idx2), shift in pairwise_shifts.items():
+                neighbor_idx = None
+                base_idx = None
+                if idx1 == current_idx and idx2 not in processed:
+                    neighbor_idx, base_idx = idx2, idx1
+                elif idx2 == current_idx and idx1 not in processed:
+                    neighbor_idx, base_idx = idx1, idx2
+                
+                if neighbor_idx is not None:
+                    base_tile = self.__meta_info.loc[base_idx]
+                    neighbor_tile = self.__meta_info.loc[neighbor_idx]
+                    
+                    # 基準タイルの確定済み座標
+                    base_pos_y, base_pos_x = final_positions[base_idx]
+                    
+                    # メタデータ上の理論的な相対位置
+                    initial_offset_y = neighbor_tile.Y_relative - base_tile.Y_relative
+                    initial_offset_x = neighbor_tile.X_relative - base_tile.X_relative
+
+                    # 位相限定相関法で計算したズレ
+                    dy, dx = shift if base_idx == idx1 else -shift
+
+                    # 最終座標を計算
+                    final_y = base_pos_y + initial_offset_y + dy
+                    final_x = base_pos_x + initial_offset_x + dx
+
+                    final_positions[neighbor_idx] = (final_y, final_x)
+                    processed.add(neighbor_idx)
+                    q.append(neighbor_idx)
+
+        print("全タイルの最終座標を決定しました。")
+        return final_positions
+    
+
+    def _render_final_image(self, final_positions):
+        """
+        ステップ4: 補正された最終座標を元に、ブレンディングしながら画像をレンダリングする
+        """
+        print("ステップ4: 最終画像のレンダリングを開始...")
+        tile_H, tile_W = self.__meta_info.loc[0, "H"], self.__meta_info.loc[0, "W"]
+        
+        # 最終的なキャンバスサイズを計算
+        min_y = min(pos[0] for pos in final_positions.values())
+        min_x = min(pos[1] for pos in final_positions.values())
+        max_y = max(pos[0] for pos in final_positions.values())
+        max_x = max(pos[1] for pos in final_positions.values())
+        
+        canvas_H = int(np.ceil(max_y + tile_H - min_y))
+        canvas_W = int(np.ceil(max_x + tile_W - min_x))
+
+        # チャンネルごとに処理
+        canvas_list = []
+        for c_idx, channel in enumerate(self.__channels):
+            print(f"チャネル '{channel}' をレンダリング中...")
+            canvas = np.zeros((canvas_H, canvas_W), dtype=np.float32)
+            weight_canvas = np.zeros_like(canvas)
+            
+            # ブレンディング用の重みマップ (全タイルで共通)
+            weight_map = distance_transform_edt(np.ones((tile_H, tile_W), dtype=np.float32))
+            weight_map /= np.max(weight_map)
+
+            channel_tiles = self.__meta_info[self.__meta_info.CH_idx == c_idx]
+            for idx, row in channel_tiles.iterrows():
+                if idx not in final_positions: continue
+                
+                img = self.images[idx].astype(np.float32)
+                # 元のコードにあった反転処理を適用
+                img = np.flipud(np.fliplr(img))
+
+                y_start_f, x_start_f = final_positions[idx]
+                # 全体がマイナスにならないようにオフセット
+                y_start = int(round(y_start_f - min_y))
+                x_start = int(round(x_start_f - min_x))
+
+                if y_start < 0 or x_start < 0 or (y_start + tile_H > canvas_H) or (x_start + tile_W > canvas_W):
+                    continue
+
+                # 線形ブレンディング
+                roi = canvas[y_start : y_start + tile_H, x_start : x_start + tile_W]
+                roi += img * weight_map
+                weight_canvas[y_start : y_start + tile_H, x_start : x_start + tile_W] += weight_map
+
+            # 正規化
+            canvas /= np.maximum(weight_canvas, 1e-6)
+            canvas_list.append(canvas.astype(np.uint16))
+        
+        # (Z, C, Y, X) の形にスタックする
+        return np.stack(canvas_list, axis=0)[np.newaxis, :, :, :]
 
 class StichedImage:
     """
@@ -137,6 +303,7 @@ class StichedImage:
 
         self.__canvas_array = canvas_array
         self.__meta_info = meta_info
+
 
     def get_meta_info(self):
         return self.__meta_info
