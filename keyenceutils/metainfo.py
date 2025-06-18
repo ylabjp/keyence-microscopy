@@ -19,6 +19,7 @@ class ImageMetadata:
         self.__xml_file = tif.replace('.tif', '.xml')
         self.image_positions: tuple[float] = None
         self.dimensions: tuple[int] = None
+        self.z_position: int = None
         self.nm_per_pixel_values: float = None
         self.lens_name = None
         self.exposure_time = None
@@ -44,6 +45,7 @@ class ImageMetadata:
 
         if region is None:
             raise ValueError(f"File: {self.__xml_file} | Attributes not found")
+        
         # Extract X and Y coordinates
         self.image_positions = (
             int(region.find('X').text), int(region.find('Y').text))
@@ -59,6 +61,9 @@ class ImageMetadata:
         # Width in pixels from SavingImageSize
         self.nm_per_pixel_values = int(region.find(
             'Width').text) / self.dimensions[0]  # Conversion factor
+
+        # Extract Z position if available
+        self.z_position = tree.find('.//StageLocationZ').text if tree.find('.//StageLocationZ') is not None else None
 
         # Extract LensName
         # <Lens Type="Keyence.Micro.Bio.Common.Data.Metadata.Conditions.LensCondition, Keyence.Micro.Bio.Common.Data.Metadata, Version=1.1.2.14, Culture=neutral, PublicKeyToken=null">
@@ -115,6 +120,7 @@ class ImageMetadata:
             "Y": int(self.image_positions[1]/self.nm_per_pixel_values),
             "W": self.dimensions[0],
             "H": self.dimensions[1],
+            "Z_position": int(self.z_position) if self.z_position is not None else 0,
             "LensName": self.lens_name,
             "ExposureTimeInS": self.exposure_time,
             "umPerPixel": self.nm_per_pixel_values / 1000,  # Convert nm to um,

@@ -160,6 +160,7 @@ class StichedImage:
             "CH")["ExposureTimeInS"].first().to_string()
 
         res = 1.0 / self.__meta_info["umPerPixel"].values[0]
+        z_interval=self.__meta_info["Z_position"].diff().max()/1000
 
         p = {
             "Lens": self.__meta_info["LensName"].values[0],
@@ -174,6 +175,7 @@ class StichedImage:
             'mode': 'composite',
             'spacing': res,
             'unit': 'um',
+            "z_interval": z_interval,  # Z interval in micrometers
         }
 
         tiff.imwrite(
