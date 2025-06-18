@@ -165,7 +165,10 @@ class StichedImage:
         p = {
             "Lens": self.__meta_info["LensName"].values[0],
             "ExposureTime(s)": exp_str,
-            "Sectioning": self.__meta_info["Sectioning"].values[0]
+            "Sectioning": self.__meta_info["Sectioning"].values[0],
+            "z_interval": z_interval,  # Z interval in micrometers
+            "CameraHardwareGain": self.__meta_info["CameraHardwareGain"].values[0],
+            "CameraGain": self.__meta_info["CameraGain"].values[0],
         } | self.__user_metadata
 
         metadata = {
@@ -175,7 +178,7 @@ class StichedImage:
             'mode': 'composite',
             'spacing': res,
             'unit': 'um',
-            "z_interval": z_interval,  # Z interval in micrometers
+            
         }
 
         tiff.imwrite(

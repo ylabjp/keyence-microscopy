@@ -3,6 +3,7 @@ import re
 # obtain XML data from a TIFF file
 # grep -a -e"Data" -B0 -A1000 Test_001.tif
 
+
 class ImageMetadata:
     """
     A class to extract XML data from a TIFF file and parse coordinates (X and Y) and dimensions (width & height).
@@ -15,7 +16,7 @@ class ImageMetadata:
             Initializes the ImageMetadata object by extracting and parsing XML data from the given TIFF file.
     """
 
-    def __init__(self, tif: str,save_xml: bool = False):
+    def __init__(self, tif: str, save_xml: bool = False):
         self.__xml_file = tif.replace('.tif', '.xml')
         self.image_positions: tuple[float] = None
         self.dimensions: tuple[int] = None
@@ -24,6 +25,7 @@ class ImageMetadata:
         self.lens_name = None
         self.exposure_time = None
         self.sectioning = None
+        self.gain: tuple[int] = None
         # Read TIFF file as binary
         with open(tif, "rb") as file:
             content = file.read().decode(errors="ignore")   # decode as string
@@ -45,7 +47,7 @@ class ImageMetadata:
 
         if region is None:
             raise ValueError(f"File: {self.__xml_file} | Attributes not found")
-        
+
         # Extract X and Y coordinates
         self.image_positions = (
             int(region.find('X').text), int(region.find('Y').text))
@@ -63,8 +65,15 @@ class ImageMetadata:
             'Width').text) / self.dimensions[0]  # Conversion factor
 
         # Extract Z position if available
-        self.z_position = tree.find('.//StageLocationZ').text if tree.find('.//StageLocationZ') is not None else None
+        self.z_position = tree.find(
+            './/StageLocationZ').text if tree.find('.//StageLocationZ') is not None else None
 
+        self.gain = (
+            tree.find(
+                './/CameraGain').text if tree.find('.//CameraGain') is not None else 0,
+            tree.find(
+                './/CameraHardwareGain').text if tree.find('.//CameraHardwareGain') is not None else 0
+        )
         # Extract LensName
         # <Lens Type="Keyence.Micro.Bio.Common.Data.Metadata.Conditions.LensCondition, Keyence.Micro.Bio.Common.Data.Metadata, Version=1.1.2.14, Culture=neutral, PublicKeyToken=null">
         # <LensName Type="System.String">PlanApo 4x 0.20/20.00mm :Default</LensName>
@@ -100,16 +109,16 @@ class ImageMetadata:
         if sectioning_info is not None:
             if sectioning_info.find('Enabled').text == "True":
                 self.sectioning = (
-                "SettingType: "+ sectioning_info.find('SettingType').text+
-                "SlitType: "+sectioning_info.find('SlitType').text+
-                "SlitSize: "+ sectioning_info.find('SlitSize').text+
-                "SlitPitch: "+ sectioning_info.find('SlitPitch').text+
-                "SlitScanPitch: " + sectioning_info.find('SlitScanPitch').text
+                    "SettingType: " + sectioning_info.find('SettingType').text +
+                    "SlitType: "+sectioning_info.find('SlitType').text +
+                    "SlitSize: " + sectioning_info.find('SlitSize').text +
+                    "SlitPitch: " + sectioning_info.find('SlitPitch').text +
+                    "SlitScanPitch: " +
+                    sectioning_info.find('SlitScanPitch').text
                 )
 
             else:
                 self.sectioning = "None"
-
 
     def __str__(self):
         return f"X: {self.image_positions[0]}, Y: {self.image_positions[1]}, Width: {self.dimensions[0]}, Height: {self.dimensions[1]}, nm_per_pixel: {self.nm_per_pixel_values}, lens_name: {self.lens_name}, Exposure_Time: {self.exposure_time}"
@@ -124,6 +133,7 @@ class ImageMetadata:
             "LensName": self.lens_name,
             "ExposureTimeInS": self.exposure_time,
             "umPerPixel": self.nm_per_pixel_values / 1000,  # Convert nm to um,
-            "Sectioning": self.sectioning
+            "Sectioning": self.sectioning,
+            "CameraHardwareGain": int(self.gain[1]),
+            "CameraGain": int(self.gain[0]),
         }
-
