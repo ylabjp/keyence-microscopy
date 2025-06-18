@@ -160,7 +160,7 @@ class StichedImage:
             "CH")["ExposureTimeInS"].first().to_string()
 
         res = 1.0 / self.__meta_info["umPerPixel"].values[0]
-        z_diff=self.__meta_info["Z_position"].sort_values().diff()
+        z_diff=self.__meta_info.groupby("Z")["Z_position"].first().sort_values().diff()
         z_interval=z_diff.median()/1000
         # assert z_diff.min() == z_diff.max(), "Z positions must be evenly spaced."
         p = {
