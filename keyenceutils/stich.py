@@ -131,7 +131,7 @@ class StichedImage:
                 slice(row["Y_relative"], row["Y_relative"] + row["H"]),
                 slice(row["X_relative"], row["X_relative"] + row["W"])
             )
-            canvas_array[selection]=canvas_array[selection]
+            canvas_array[selection]=img#canvas_array[selection]
 
             del img  # Free memory
 
