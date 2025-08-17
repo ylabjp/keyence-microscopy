@@ -120,9 +120,12 @@ class StichedImage:
             # Open the image and handle different modes
             img = tiff.imread(os.path.join(folder_path, row["fname"]))
             if img.ndim > 2:  # Single channel image
-                img = img[0]  # Take the first channel
+                ndim_ori = img.shape
+                img = img[:,:,0]  # Take the first channel
+                ndim_after = img.shape
                 print(
                     "Warning: a multi channel image was found. Only the 1st Ch will be used. Check the microsope settings.")
+                print("Original shape: {}, After shape: {}".format(ndim_ori, ndim_after))
             if img.dtype != np.uint16:
                 raise ValueError("WARNING: not 16 bit image")
             img = np.flipud(np.fliplr(img))
