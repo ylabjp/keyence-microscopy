@@ -82,7 +82,7 @@ class StichedImage:
             [re.search(r'_Z\d+_', f) is not None for f in all_tif_files])
 
         meta_info = []
-        z_size = 0
+        z_size = 1
 
         for c_idx, channel in enumerate(self.__channels):
             print(f"Processing channel: {channel} in folder {folder_path}")
@@ -103,7 +103,7 @@ class StichedImage:
             if zstack_mode:
                 d["Z"] = d["fname"].apply(lambda x: int(re.search(r'_Z(\d+)_', x).group(1))
                                           if re.search(r'_Z(\d+)_', x) else 0)
-                z_size = max(z_size, d["Z"].max())  # 00001, 00002, ....
+                z_size = max(z_size, d["Z"].max()-d["Z"].min()+1)  # 00001, 00002, ....
 
             else:
                 d["Z"] = 0
