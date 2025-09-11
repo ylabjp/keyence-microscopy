@@ -103,7 +103,8 @@ class StichedImage:
             if zstack_mode:
                 d["Z"] = d["fname"].apply(lambda x: int(re.search(r'_Z(\d+)_', x).group(1))
                                           if re.search(r'_Z(\d+)_', x) else 0)
-                z_size = max(z_size, d["Z"].max()-d["Z"].min()+1)  # 00001, 00002, ....
+                d["Z"]-=1  # original 00001, 00002, ..... Need convertion to index
+                z_size = max(z_size, d["Z"].max()-d["Z"].min()+1)  
 
             else:
                 d["Z"] = 0
