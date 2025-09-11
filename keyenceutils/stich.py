@@ -11,7 +11,6 @@ def get_lut(cnum):
     ramp = np.arange(256, dtype=np.uint8)
     zeros = np.zeros(256, dtype=np.uint8)
 
-
     # 'Green' LUT: R=0, G=ramp, B=0
     lut_cyan = np.stack([zeros, ramp, ramp], axis=1)
 
@@ -21,9 +20,10 @@ def get_lut(cnum):
     lut_yellow = np.stack([ramp, ramp, zeros], axis=1)
 
     lut_gray = np.stack([ramp, ramp, ramp], axis=1)
-        
+
     luts = [lut_cyan, lut_magent, lut_yellow, lut_gray]
     return [luts[i % len(luts)] for i in range(cnum)]
+
 
 class StichedImage:
     """
@@ -203,9 +203,9 @@ class StichedImage:
             'mode': 'composite',
             'spacing': res,
             'unit': 'um',
-            "ijmetadata":{
-                'LUTs':get_lut(self.__canvas_array.shape[1])
-            }
+
+            'LUTs': get_lut(self.__canvas_array.shape[1])
+
         }
         tiff.imwrite(
             output_path,
