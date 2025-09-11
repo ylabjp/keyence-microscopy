@@ -7,6 +7,24 @@ import pandas as pd
 from keyenceutils.metainfo import ImageMetadata
 
 
+def get_lut(cnum):
+    ramp = np.arange(256, dtype=np.uint8)
+    zeros = np.zeros(256, dtype=np.uint8)
+
+
+    # 'Green' LUT: R=0, G=ramp, B=0
+    lut_cyan = np.stack([zeros, ramp, ramp], axis=1)
+
+    # 'Blue' LUT: R=0, G=0, B=ramp
+    lut_magent = np.stack([ramp, zeros, ramp], axis=1)
+
+    lut_yellow = np.stack([ramp, ramp, zeros], axis=1)
+
+    lut_gray = np.stack([ramp, ramp, ramp], axis=1)
+        
+    luts = [lut_cyan, lut_magent, lut_yellow, lut_gray]
+    return [luts[i % len(luts)] for i in range(cnum)]
+
 class StichedImage:
     """
     StichedImage is a utility class for processing and stitching microscopy images 
@@ -121,11 +139,12 @@ class StichedImage:
             img = tiff.imread(os.path.join(folder_path, row["fname"]))
             if img.ndim > 2:  # Single channel image
                 ndim_ori = img.shape
-                img = img[:,:,0]  # Take the first channel
+                img = img[:, :, 0]  # Take the first channel
                 ndim_after = img.shape
                 print(
                     "Warning: a multi channel image was found. Only the 1st Ch will be used. Check the microsope settings.")
-                print("Original shape: {}, After shape: {}".format(ndim_ori, ndim_after))
+                print("Original shape: {}, After shape: {}".format(
+                    ndim_ori, ndim_after))
             if img.dtype != np.uint16:
                 raise ValueError("WARNING: not 16 bit image")
             img = np.flipud(np.fliplr(img))
@@ -135,7 +154,7 @@ class StichedImage:
                 slice(row["Y_relative"], row["Y_relative"] + row["H"]),
                 slice(row["X_relative"], row["X_relative"] + row["W"])
             )
-            canvas_array[selection]=img#canvas_array[selection]
+            canvas_array[selection] = img  # canvas_array[selection]
 
             del img  # Free memory
 
@@ -164,8 +183,9 @@ class StichedImage:
             "CH")["ExposureTimeInS"].first().to_string()
 
         res = 1.0 / self.__meta_info["umPerPixel"].values[0]
-        z_diff=self.__meta_info.groupby("Z")["Z_position"].first().sort_values().diff()
-        z_interval=z_diff.median()/1000
+        z_diff = self.__meta_info.groupby(
+            "Z")["Z_position"].first().sort_values().diff()
+        z_interval = z_diff.median()/1000
         # assert z_diff.min() == z_diff.max(), "Z positions must be evenly spaced."
         p = {
             "Lens": self.__meta_info["LensName"].values[0],
@@ -183,9 +203,10 @@ class StichedImage:
             'mode': 'composite',
             'spacing': res,
             'unit': 'um',
-            
+            "ijmetadata":{
+                'LUTs':get_lut(self.__canvas_array.shape[1])
+            }
         }
-
         tiff.imwrite(
             output_path,
             self.__canvas_array,
@@ -197,5 +218,6 @@ class StichedImage:
             ),
             resolutionunit=tiff.RESUNIT.MICROMETER,
             metadata=metadata,
+
         )
         pass
