@@ -11,17 +11,15 @@ def get_lut(cnum):
     ramp = np.arange(256, dtype=np.uint8)
     zeros = np.zeros(256, dtype=np.uint8)
 
-    # 'Green' LUT: R=0, G=ramp, B=0
-    lut_cyan = np.stack([zeros, ramp, ramp], axis=1)
+    c1 = np.stack([zeros, ramp, zeros], axis=1)
 
-    # 'Blue' LUT: R=0, G=0, B=ramp
-    lut_magent = np.stack([ramp, zeros, ramp], axis=1)
+    c2 = np.stack([ramp, zeros, zeros], axis=1)
 
-    lut_yellow = np.stack([ramp, ramp, zeros], axis=1)
+    c3 = np.stack([zeros, zeros, ramp], axis=1)
 
-    lut_gray = np.stack([ramp, ramp, ramp], axis=1)
+    c4 = np.stack([ramp, ramp, ramp], axis=1)
 
-    luts = [lut_cyan, lut_magent, lut_yellow, lut_gray]
+    luts = [c1, c2, c3, c4]
     return [luts[i % len(luts)] for i in range(cnum)]
 
 
