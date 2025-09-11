@@ -202,7 +202,7 @@ class StichedImage:
             'spacing': res,
             'unit': 'um',
 
-            'LUTs': get_lut(self.__canvas_array.shape[1])
+            # 'LUTs': get_lut(self.__canvas_array.shape[1])
 
         }
         tiff.imwrite(
