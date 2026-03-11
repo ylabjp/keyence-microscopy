@@ -80,11 +80,11 @@ dataset/
               Format:(YYMMDD9)(Time)
 Keyence/Output/20260309/053210/<br>
   &nbsp;&nbsp;PH033/20250704/<br> 
-  &nbsp;&nbsp;20XS/Z_2S_0p1S_1p1/<br>
-  &nbsp;&nbsp;XY02/<br>
-           &nbsp;&nbsp;;mage\_XY02\_CH1to\_CH3\_Z001\_to\_Z021\_stack\_T001.ome.tif<br>
-           &nbsp;&nbsp;Image\_XY002\_CH001\_to\_CH003\_Z001\_to\_Z021\_stack.validation.json<br> 
-           &nbsp;&nbsp;Image\_XY002\_CH001\_to\_CH003\_Z001\_to\_Z021\_stack.report.txt<br>
+  &nbsp;&nbsp;&nbsp;;20XS/Z_2S_0p1S_1p1/<br>
+  &nbsp;&nbsp;&nbsp;&nbsp;XY02/<br>
+           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;;mage\_XY02\_CH1to\_CH3\_Z001\_to\_Z021\_stack\_T001.ome.tif<br>
+           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Image\_XY002\_CH001\_to\_CH003\_Z001\_to\_Z021\_stack.validation.json<br> 
+           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Image\_XY002\_CH001\_to\_CH003\_Z001\_to\_Z021\_stack.report.txt<br>
 
 
 ## Scientific Output Name
@@ -127,10 +127,10 @@ and outout name should genegated:
  
 ## Dataset Report
 
-Each processed dataset produces a report:
+Each processed dataset produces a report:<br>
                                                                          == **Summary Report** ==
-ImaeXY002\_CH001\_to\_CH003\_Z001\_to\_Z021\_stack.validation.json  ->  + Good for machine readeable
-ImaeXY002\_CH001\_to\_CH003\_Z001\_to\_Z021\_stack.report.txt       ->  + Easy for human quick look
+ImaeXY002\_CH001\_to\_CH003\_Z001\_to\_Z021\_stack.validation.json  ->  *Good for machine readeable*
+ImaeXY002\_CH001\_to\_CH003\_Z001\_to\_Z021\_stack.report.txt       ->  *Easy for human quick look*
 
 - The report includes:
  - I/o path name
