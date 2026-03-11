@@ -128,9 +128,9 @@ and outout name should genegated:
 ## Dataset Report
 
 Each processed dataset produces a report:<br>
-                                                                         == **Summary Report** ==
-ImaeXY002\_CH001\_to\_CH003\_Z001\_to\_Z021\_stack.validation.json  ->  *Good for machine readeable*
-ImaeXY002\_CH001\_to\_CH003\_Z001\_to\_Z021\_stack.report.txt       ->  *Easy for human quick look*
+                                                                         == **Summary Report** ==<br>
+ImaeXY002\_CH001\_to\_CH003\_Z001\_to\_Z021\_stack.validation.json  ->  *Good for machine readeable*  
+ImaeXY002\_CH001\_to\_CH003\_Z001\_to\_Z021\_stack.report.txt       ->  *Easy for human quick look*  
 
 - The report includes:
  - I/o path name
