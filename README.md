@@ -78,13 +78,13 @@ dataset/
 
 
               Format:(YYMMDD9)(Time)
-Keyence\Output\_20260309\_053210/<br>
-  &nbspPH033\20250704/<br> 
-  &nbsp20XS\Z\_2S\_0p1S\_1p1/<br>
-  &nbspXY02/<br>
-           &nbspImage\_XY02\_CH1to\_CH3\_Z001\_to\_Z021\_stack\_T001.ome.tif<br>
-           &nbspImage\_XY002\_CH001\_to\_CH003\_Z001\_to\_Z021\_stack.validation.json<br> 
-           &nbspImage\_XY002\_CH001\_to\_CH003\_Z001\_to\_Z021\_stack.report.txt<br>
+Keyence/Output/20260309/053210/<br>
+  &nbsp;PH033/20250704/<br> 
+  &nbsp;20XS/Z_2S_0p1S_1p1/<br>
+  &nbsp;XY02/<br>
+           &nbsp;mage\_XY02\_CH1to\_CH3\_Z001\_to\_Z021\_stack\_T001.ome.tif<br>
+           &nbsp;Image\_XY002\_CH001\_to\_CH003\_Z001\_to\_Z021\_stack.validation.json<br> 
+           &nbsp;Image\_XY002\_CH001\_to\_CH003\_Z001\_to\_Z021\_stack.report.txt<br>
 
 
 ## Scientific Output Name
