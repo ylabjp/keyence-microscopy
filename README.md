@@ -177,9 +177,12 @@ ylabcommon = { path = "../YlabCommonScripts/ylab-common-scripts", editable = tru
 
 Example:
 
+```bash
 uv run python runkeyence\_bioio\_process\_experiment.py \
   --tiffdir /path/to/keyence\_dataset \
+  --base_path PH033_20250704/20XS-Z-2S-0.1S_1.1/XY02/ \
   --outputdir ./output
+```
 
 For full CLI options:
 
