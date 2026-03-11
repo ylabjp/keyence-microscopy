@@ -58,10 +58,10 @@ Keyence acquisitions typically contain TIFF planes structured by tile, Z slice, 
 Example:
 
 **dataset/**
- ├── Imae\XY02\\_Z001\\_CH1.tif
- ├── Imae\XY02\\_Z002\\_CH1.tif
- ├── Imae\XY02\\_Z003\\_CH1.tif
- ├── Imae\XY02\\_Z001\\_CH3.tif
+ ├── Image\_XY02\_Z001\_CH1.tif
+ ├── Image\_XY02\_Z002\_CH1.tif
+ ├── Image\_XY02\_Z003\_CH1.tif
+ ├── Image\_XY02\_Z001\_CH3.tif
  └── ...
 
 ### Example Output
@@ -74,10 +74,10 @@ Keyence\Output\_20260309\_053210/
    PH033\20250704/ 
       20XS\Z\_2S\_0p1S\_1p1/
          XY02/
-            Imae\XY02\_CH1to\_CH3\_Z001\_to\_Z021\_stack\_T001.ome.tif
-            ImaeXY002\_CH001\_to\_CH003\_Z001\_to\_Z021\_stack.validation.json 
+            Image\_XY02\_CH1to\_CH3\_Z001\_to\_Z021\_stack\_T001.ome.tif
+            Image\_XY002\_CH001\_to\_CH003\_Z001\_to\_Z021\_stack.validation.json 
                                                                                
-            ImaeXY002\_CH001\_to\_CH003\_Z001\_to\_Z021\_stack.report.txt
+            Image\_XY002\_CH001\_to\_CH003\_Z001\_to\_Z021\_stack.report.txt
 
 
 ### Scientific Output Name
@@ -85,18 +85,19 @@ Keyence\Output\_20260309\_053210/
 Output filenames automatically encode experiment structure.
 Example:
 
-ImaeXY02\_CH1\_to\_CH3\_Z001\_to\_Z021\_stack\_T001.ome.tif
+ImageXY02\_CH1\_to\_CH3\_Z001\_to\_Z021\_stack\_T001.ome.tif
 
-Information encoded:
+### Information Encoded in Output Filename
 
 | Item | Description |
-| :--- | :--- |
-| Image | acquisition type |
-|XY02	|stage position |
-|CH1\_to\_CH3 |	channel stack range |
-|Z001\_to\_Z021 |	Z stack range |
-|stack |	stacked output |
-|T001 |	timepoint |
+|:-----|:------------|
+| Image | Acquisition type |
+| XY02 | Stage position |
+| CH1\_to\_CH3 | Channel stack range |
+| Z001\_to\_Z021 | Z stack range |
+| stack | Stacked output |
+| T001 | Timepoint |
+
 
 If Input dataset having XY01...100, the also it will stick the dataset in XY mosaic), 
 and outout name should genegated:
