@@ -63,12 +63,14 @@ Repository Structure: Shared utilities are provided by: [ylabcommon](https://ith
 Keyence acquisitions typically contain TIFF planes structured by tile, Z slice, and channel.
 Example:
 
+```pgsql
 dataset/
 ├── Image_XY02_Z001_CH1.tif
 ├── Image_XY02_Z002_CH1.tif
 ├── Image_XY02_Z003_CH1.tif
 ├── Image_XY02_Z001_CH3.tif
 └── ...
+````
 ### Example Output
 
 - Root directory with the spectroscopy name followwed by date, time structure
