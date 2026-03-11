@@ -64,10 +64,10 @@ Keyence acquisitions typically contain TIFF planes structured by tile, Z slice, 
 Example:
 
 dataset/
-├── Image\_XY02\_Z001\_CH1.tif
-├── Image\_XY02\_Z002\_CH1.tif
-├── Image\_XY02\_Z003\_CH1.tif
-├── Image\_XY02\_Z001\_CH3.tif
+├── Image_XY02_Z001_CH1.tif
+├── Image_XY02_Z002_CH1.tif
+├── Image_XY02_Z003_CH1.tif
+├── Image_XY02_Z001_CH3.tif
 └── ...
 ### Example Output
 
