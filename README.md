@@ -42,7 +42,7 @@ The framework supports datasets containin:
 
 - All stacks are normalized internally to the standard microscopy dimension order: TCZYX
 
-### Features
+## Features
 
 - Automatic TIFF discovery and filterin
 - Automatic dimension detection
@@ -58,7 +58,7 @@ Repository Structure: Shared utilities are provided by: [ylabcommon](https://ith
 
 ## IO dataset structure
 
-### Example Input Dataset
+## Example Input Dataset
 
 Keyence acquisitions typically contain TIFF planes structured by tile, Z slice, and channel.
 Example:
@@ -70,29 +70,29 @@ dataset/
 ├── Image_XY02_Z003_CH1.tif
 ├── Image_XY02_Z001_CH3.tif
 └── ...
-````
-### Example Output
+```
+## Example Output Dataset
 
 - Root directory with the spectroscopy name followwed by date, time structure
 - Then automatically take susequect folder(s)/subfolder(s) accordin to the input file directory: 
 
-                 (YYMMDD)  (Time)
-Keyence\Output\_20260309\_053210/
-   PH033\20250704/ 
-      20XS\Z\_2S\_0p1S\_1p1/
-         XY02/
-            Image\_XY02\_CH1to\_CH3\_Z001\_to\_Z021\_stack\_T001.ome.tif
-            Image\_XY002\_CH001\_to\_CH003\_Z001\_to\_Z021\_stack.validation.json 
-                                                                               
-            Image\_XY002\_CH001\_to\_CH003\_Z001\_to\_Z021\_stack.report.txt
+
+              Format:(YYMMDD9)(Time)
+Keyence\Output\_20260309\_053210/<br>
+   PH033\20250704/<br> 
+      20XS\Z\_2S\_0p1S\_1p1/<br>
+         XY02/<br>
+            Image\_XY02\_CH1to\_CH3\_Z001\_to\_Z021\_stack\_T001.ome.tif<br>
+            Image\_XY002\_CH001\_to\_CH003\_Z001\_to\_Z021\_stack.validation.json<br> 
+            Image\_XY002\_CH001\_to\_CH003\_Z001\_to\_Z021\_stack.report.txt<br>
 
 
-### Scientific Output Name
+## Scientific Output Name
 
 Output filenames automatically encode experiment structure.
 Example:
 
-ImageXY02\_CH1\_to\_CH3\_Z001\_to\_Z021\_stack\_T001.ome.tif
+Image\_XY02\_CH1\_to\_CH3\_Z001\_to\_Z021\_stack\_T001.ome.tif
 
 ### Information Encoded in Output Filename
 
@@ -106,10 +106,10 @@ ImageXY02\_CH1\_to\_CH3\_Z001\_to\_Z021\_stack\_T001.ome.tif
 | T001 | Timepoint |
 
 
-If Input dataset having XY01...100, the also it will stick the dataset in XY mosaic), 
+- If Input dataset having XY01...100, the also it will stick the dataset in XY mosaic), 
 and outout name should genegated:
 
-XY01\_to\_100\_CH1\_to\_CH3\_Z001\_to\_Z021\_stack\_T001.ome.tif
+    -XY01\_to\_100\_CH1\_to\_CH3\_Z001\_to\_Z021\_stack\_T001.ome.tif
 
 **In a Summary**
   
