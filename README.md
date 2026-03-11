@@ -14,25 +14,31 @@ metadata extraction, validation, output writin, and other features.
 
 --- 
 
-## Overview
+# Overview
 
 The pipeline converts raw Keyence TIFF acquisitions into Fiji-compatible OME datasets while preservin physical metadata and experiment structure.
 
-### Typical workflow:
+## Typical workflow:
 
-Raw TIFF dataset TIFF discovery -> Discover valid TIFF files -> Select the Dimension/s detection (XY / Z / Channel / Time)
--> BioIO stack builder -> Metadata extraction -> Metadata validation -> Scientific filename eneration -> OME-TIFF writer 
+-> Raw TIFF dataset TIFF discovery 
+-> Discover valid TIFF files
+-> Select the Dimension/s detection (XY / Z / Channel / Time)
+-> BioIO stack builder 
+-> Metadata extraction 
+-> Metadata validation 
+-> Scientific filename eneration  
+-> OME-TIFF writer 
 -> Dataset report eneration
 
-### Supported Input Dimensions
+## Supported Input Dimensions
 
 The framework supports datasets containin:
 
-(Z,Y,X)
-(C,Z,Y,X)
-(T,Z,Y,X)
-(C,T,Z,Y,X)
-(XY mosaic)
+(Z,Y,X)<br>
+(C,Z,Y,X)<br>
+(T,Z,Y,X)<br>
+(C,T,Z,Y,X)<br>
+(XY mosaic)<br>
 
 - All stacks are normalized internally to the standard microscopy dimension order: TCZYX
 
@@ -57,13 +63,12 @@ Repository Structure: Shared utilities are provided by: [ylabcommon](https://ith
 Keyence acquisitions typically contain TIFF planes structured by tile, Z slice, and channel.
 Example:
 
-**dataset/**
- ├── Image\_XY02\_Z001\_CH1.tif
- ├── Image\_XY02\_Z002\_CH1.tif
- ├── Image\_XY02\_Z003\_CH1.tif
- ├── Image\_XY02\_Z001\_CH3.tif
- └── ...
-
+dataset/
+├── Image\_XY02\_Z001\_CH1.tif
+├── Image\_XY02\_Z002\_CH1.tif
+├── Image\_XY02\_Z003\_CH1.tif
+├── Image\_XY02\_Z001\_CH3.tif
+└── ...
 ### Example Output
 
 - Root directory with the spectroscopy name followwed by date, time structure
