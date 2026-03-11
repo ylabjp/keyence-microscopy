@@ -1,0 +1,255 @@
+from pathlib import Path
+from typing import Optional
+import json
+from datetime import datetime, UTC, timezone
+#from bioio_base.types import PhysicalPixelSizes
+
+from ylabcommon.io.file_selection import collect_valid_tiffs
+from ylabcommon.io.outfile_name import build_output_name
+from ylabcommon.io.summary_metadata_helper import get_enhanced_metadata, generate_file_sha256
+from ylabcommon.utils.utils import hybrid, style_print
+
+from ylabcommon.bioio.bioio_reader import BioIOReader
+#from ylabcommon.bioio.bioio_metadata import BioIOMetadataExtractor
+from ylabcommon.bioio.bioio_writer import BioIOWriter
+#from ylabcommon.bioio.keyence_params_adapter import ThorlabParamsAdapter
+from ylabcommon.bioio.keyence_bioio_stack_builder import stack_keyence_with_bioio_calibrated
+from ylabcommon.bioio.keyence_metadata_extractor import KeyenceMetadataExtractor
+
+
+
+class KeyenceBioioBuilder:
+    """
+    Full reconstruction pipeline:
+
+    TIFF discovery → Ultra stacking → BioIOReader →
+    Metadata extraction → XML validation → Output naming → Write OME
+    """
+
+    def __init__(
+        self,
+        tiff_dir: Path,
+        #xml_file: Optional[Path],
+        output_dir: Path,
+        *,
+        compression: str = "zlib",
+        compression_level: int = 6,
+        validate_metadata: bool = True,
+        dry_run: str = False,
+    ):
+
+        self.tiff_dir = Path(tiff_dir)
+        #self.xml_file = Path(xml_file) if xml_file else None
+        self.output_dir = Path(output_dir)
+        self.dry_run = dry_run
+
+        self.compression = compression
+        self.compression_level = compression_level
+        self.validate_metadata = validate_metadata
+
+        self.output_dir.mkdir(parents=True, exist_ok=True)
+
+    # -------------------------------------------------
+    # TIFF DISCOVERY + STACK
+    # -------------------------------------------------
+    """
+    def _get_params(self):
+        params_adapter = ThorlabParamsAdapter(self.xml_file)
+        get_keyences_params = params_adapter.extract()
+        return get_keyences_params
+    """
+    def _discover_and_stack(self):
+
+        print("[Builder] Discovering valid TIFF files...")
+
+        tiff_files = collect_valid_tiffs(self.tiff_dir)
+
+        if not tiff_files:
+            raise RuntimeError("No valid TIFF files found.")
+
+        print(f"[Builder] Found {len(tiff_files)} usable TIFF files")
+        print("[Builder] Ultra stacking images...")
+
+        ##get_keyences_params = self._get_params()
+        stacked_data, tiff_files, channel_names  = stack_keyence_with_bioio_calibrated(tiff_files)
+
+
+        #total_depth_um = stacked_data.Z.max().values
+        #print(f"Total volume depth: {total_depth_um} microns")
+
+        #data_to_process = stacked_data.data
+        return stacked_data, tiff_files, channel_names
+
+
+     def _validate_thorlab_stack(image_meta):
+        
+       report = {"status": "VALIDATED", "checks": []}
+
+        def record(name, ok, msg):
+            report["checks"].append({"name": name, "ok": ok, "msg": msg})
+            if not ok:
+                report["status"] = "NOT VALIDATED"
+
+        # -----------------------------
+        # Pixel size validation
+        # -----------------------------
+
+        pixel_sizes = image_meta.pixel_sizes
+        if len(pixel_sizes) != 1:
+             raise ValueError(
+                 f"Inconsistent pixel size detected: {pixel_sizes}"
+             )
+         record("pixel_sizes",
+               len(pixel_sizes) != 1
+               f"meta_info={pixel_sizes}")
+
+        # -----------------------------
+        # Image dimension validation
+        # -----------------------------
+
+        dims = image_meta.dimensions = {(m["W"], m["H"]) for m in metas}
+        if len(dims) != 1:
+            raise ValueError(
+                f"Inconsistent image dimensions detected: {dims}"
+            )
+         record("Dimensions",
+               len(dims) != 1,
+               f""  
+
+        image_meta.lens_names = {m["LensName"] for m in metas} 
+
+        report = {"status": "VALIDATED", "checks": []}
+
+        def record(name, ok, msg):
+            report["checks"].append({"name": name, "ok": ok, "msg": msg})
+            if not ok:
+                report["status"] = "NOT VALIDATED"
+        
+
+
+    # -------------------------------------------------
+    # BioIO Processing Reader
+    # -------------------------------------------------
+    def _load_with_meta_info(self, stacked_data, tiff_files, channel_names):
+
+        print("[Builder] Extracting image meta data ...")
+            
+        extractor = KeyenceMetadataExtractor(
+                tiff_files,
+                stacked_data.shape,
+                channel_names
+        )
+
+        image_meta = extractor.extract()
+
+        #image_meta.dim_order = "TCZYX"
+
+        print(f"Metadata summary:")
+        print(f"Pixel size:, {image_meta.pixel_size}")
+        print(f"Channels:, {channel_names}")
+        print(f"Data shape:, {stacked_data.shape}")
+
+        #return data, image_meta, hybrid_channel_name
+        return image_meta
+    # -------------------------------------------------
+    # WRITE OUTPUT
+    # -------------------------------------------------
+
+    def _write(self, data, image_meta, output_path):
+
+        print("[Builder] Writing OME output...")
+
+        writer = BioIOWriter(
+            output_path,
+            compression=self.compression,
+            compression_level=self.compression_level,
+        )
+
+        writer.write(
+            data,
+            dim_order=image_meta.dim_order,
+            channel_names=None,
+            #physical_pixel_sizes=phys_sizes,
+            physical_pixel_sizes=image_meta.pixel_size,
+        )
+
+    # -------------------------------------------------
+    # Validation report
+    # -------------------------------------------------
+
+    def _write_report(self, report, image_meta, output_path, hybrid_channel_name, tiff_files):
+
+        report_path = output_path.with_suffix(".validation.json")
+        extra_meta_summary = get_enhanced_metadata(image_meta, tiff_files)
+
+        payload = {
+            #"timestamp": datetime.datetime.now(datetime.UTC),
+            #"timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            **extra_meta_summary,
+            "source_tiff_dir": str(self.tiff_dir),
+            "experiment_xml": str(self.xml_file) if self.xml_file else None,
+            "Channel_name_hybrid_index_str": hybrid_channel_name,
+            "image_metadata": image_meta.to_dict(),
+            "validation": report,
+            "software": "ylabcommon + thorlab_loader + bioio backend",
+        }
+
+        #payload.update(extra_meta_summary)
+
+        for i in (tiff_files):
+            if i == 0:  # Only do this for the first file to save time
+                first_file_hash = generate_file_sha256(output_path)
+                payload["integrity_check"] = {"first_file_sha256": first_file_hash}
+
+        with open(report_path, "w") as f:
+            json.dump(payload, f, indent=2)
+
+        print(f"[Builder] Validation report → {report_path}")
+
+    # -------------------------------------------------
+    # MAIN PIPELINE
+    # -------------------------------------------------
+
+    def build(self):
+        print("=============================================================================")
+        print("[Builder] Starting BioIO reconstruction pipeline")
+
+        stacked_data, tiff_files, channel_names  = self._discover_and_stack()
+
+        image_meta = self._load_with_meta_info(stacked_data, tiff_files, channel_names)
+        #data = self._load_with_bioio(stacked_data)
+
+        #xml_meta = None
+        """
+        if self.validate_metadata and self.xml_file:
+            xml = ExperimentXMLParser(self.xml_file)
+            xml_meta = xml.extract_metadata()
+        report = self._validate_keyence_stack(xml_meta, image_meta)
+        """
+        #Z_stack_val = data.shape[2]
+        #T_stack_val = data.shape[0]
+        #output_path = build_output_name(self.output_dir, tiff_files, Z_stack_val, T_stack_val)
+        """
+        if self.dry_run:
+            style_print("[DRY RUN ENABLED]", "info")
+            print("[Validating] TIFF discovery successful")
+            print("[Validating] BioIO stacking successful")
+            print("[Validating]  Metadata extraction successful")
+            print(f"[Validating] Validation status: {report['status']}")
+            print("[Skipping] file writing")
+            print("[Skipping] summary JSON writing")
+            print("\n    EXECUTION SUMMARY    \n")
+            print(f"Input TIFF count : {len(tiff_files)}")
+            print(f"Stack shape      : {stacked_data.shape}")
+            print(f"Pixel size (µm)  : {image_meta.pixel_size}")
+            print(f"Output name      : {output_path.name}.ome.tif")
+            print("\nDry run completed successfully.\n")
+            return
+        if report["status"] == "VALIDATED":
+            self._write(stacked_data, image_meta, output_path)
+
+        self._write_report(report, image_meta, output_path, hybrid_channel_name, tiff_files) 
+        """
+
+        print("[Builder] DONE.")
