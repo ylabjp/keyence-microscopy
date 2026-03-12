@@ -105,11 +105,15 @@ def main() -> None:
     parser = build_parser()
     args = parser.parse_args()
     
-    dataset_name = args.tiff_dir.name
-    print("DATA PATH = ", dataset_name)
-
     dataset_name = args.base_path
-    output_dir = build_output_dir_name("Keyence", args.output_dir, f"{dataset_name}") 
+
+    if args.diff_outdirpath:
+        change_output_dir_path = args.diff_outdirpath
+    else:
+        change_output_dir_path = None
+
+    #output_dir = build_output_dir_name("Thorlab", change_output_dir, f"{dataset_name}")
+    output_dir = build_output_dir_name("Thorlab", args.output_dir, f"{dataset_name}", change_output_dir_path)
 
     theme = get_theme()
 
