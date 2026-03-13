@@ -6,6 +6,24 @@ __pycache__/
 # C extensions
 *.so
 
+#Python cache / temp fileso
+*.pyd
+*.sqlite3
+*.db
+*.swp
+*.swo
+*.swn
+# Byte-compiled / optimized / DLL files
+*.so
+*.dll
+*.dylib
+
+# Coverage
+.coverage
+htmlcov/
+coverage.xml
+
+
 # Distribution / packaging
 .Python
 build/
@@ -135,6 +153,30 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+uv.lock
+
+# ------------------------------
+# Project specific ignores
+# ------------------------------
+# Temporary test images, scratch files, examples
+tmp/
+scratch/
+Output/
+Thorlab_*/
+Keyence_Output*/
+# ------------------------------
+# Google Drive API credentials  
+# ------------------------------
+credentials/
+*.json
+*.pickle
+token.pickle
+credential/
+drive_work/
+
+#Ignore large TIFF files in your repo
+*.tif
+*.tiff
 
 # Spyder project settings
 .spyderproject
