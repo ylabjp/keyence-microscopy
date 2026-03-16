@@ -175,19 +175,37 @@ ylabcommon = { path = "../YlabCommonScripts/ylab-common-scripts", editable = tru
 
 ## Runnin the Pipeline
 
-Example:
+### For the test run with data
 
 ```bash
-uv run python runkeyence\_bioio\_process\_experiment.py \
-  --tiffdir /path/to/keyence\_dataset \
-  --base_path PH033_20250704/20XS-Z-2S-0.1S_1.1/XY02/ \
-  --outputdir ./output
+uv run python run_keyence_bioio_process_experiment.py \
+--tiff-dir < Like: /InFileKeyence/PH033_20250704/20XS-Z-2S-0.1S_1.1/XY02/ > \
+--base_path < Like: PH033_20250704/20XS-Z-2S-0.1S_1.1/XY02/ > \
+--output-dir <Like: dirKeyence > 
+--diff_outdirpath < Build output directory > \
+--singlefilerun 
+
 ```
 
 For full CLI options:
 
 uv run python runkeyence\_bioio\_process\_experiment.py --help
 
+
+### Run with input zip files, big chunk data
+
+- The pipeline processes all datasets automatically
+- Output directories follow the structure of the input ZIP file paths
+- Generated files are saved with timestamped names to avoid overwriting previous results
+
+```bash
+
+uv run python run_keyence_bioio_process_experiment.py \
+--output-dir < Like: dirKeyence >  
+--diff_outdirpath < Build output directory > \ 
+--infile_yaml < Data file example : dataset_thorlab.yaml >
+
+```
 ---
 
 ## Environment Issue
