@@ -5,18 +5,18 @@ import numpy as np
 from datetime import datetime, UTC, timezone
 #from bioio_base.types import PhysicalPixelSizes
 
-from ylabcommon.io.file_selection import collect_valid_tiffs
-from ylabcommon.io.outfile_name import build_output_name, extract_dimensions, build_stack_filename
-from ylabcommon.io.summary_metadata_helper import get_enhanced_metadata, generate_file_sha256
+from ylabcommon.utils.file_selection import collect_valid_tiffs
+from ylabcommon.utils.outfile_name import build_output_name, extract_dimensions, build_stack_filename
+from ylabcommon.utils.summary_metadata_helper import get_enhanced_metadata, generate_file_sha256
 from ylabcommon.utils.utils import hybrid, style_print
 from ylabcommon.utils.report_builder import ReportBuilder
 
-from ylabcommon.bioio.bioio_reader import BioIOReader
-#from ylabcommon.bioio.bioio_metadata import BioIOMetadataExtractor
-from ylabcommon.bioio.bioio_writer import BioIOWriter
-#from ylabcommon.bioio.keyence_params_adapter import ThorlabParamsAdapter
-from ylabcommon.bioio.keyence_bioio_stack_builder import stack_keyence_with_bioio_calibrated
-from ylabcommon.bioio.keyence_metadata_extractor import KeyenceMetadataExtractor
+from ylabcommon.bioio.core.bioio_reader import BioIOReader
+from ylabcommon.bioio.core.bioio_writer import BioIOWriter
+
+from ylabcommon.bioio.keyence.keyence_bioio_stack_builder import stack_keyence_with_bioio_calibrated
+from ylabcommon.bioio.keyence.keyence_metadata_extractor import KeyenceMetadataExtractor
+
 
 
 
@@ -73,14 +73,14 @@ class KeyenceBioioBuilder:
         print("[Builder] Ultra stacking images...")
 
         ##get_keyences_params = self._get_params()
-        stacked_data, tiff_files, channel_names  = stack_keyence_with_bioio_calibrated(tiff_files)
+        stacked_data, tiff_files, channel_names, z_max_min_re  = stack_keyence_with_bioio_calibrated(tiff_files)
 
 
         #total_depth_um = stacked_data.Z.max().values
         #print(f"Total volume depth: {total_depth_um} microns")
 
         #data_to_process = stacked_data.data
-        return stacked_data, tiff_files, channel_names
+        return stacked_data, tiff_files, channel_names, z_max_min_re
 
 
     def _validate_keyence_stack(self, image_meta):
@@ -274,7 +274,7 @@ class KeyenceBioioBuilder:
         print("=============================================================================")
         print("[Builder] Starting BioIO reconstruction pipeline")
 
-        stacked_data, tiff_files, channel_names  = self._discover_and_stack()
+        stacked_data, tiff_files, channel_names, z_mx_min_re  = self._discover_and_stack()
 
         image_meta = self._load_with_meta_info(stacked_data, tiff_files, channel_names)
 
@@ -284,7 +284,8 @@ class KeyenceBioioBuilder:
 
         image_name, dims = extract_dimensions(tiff_files)
 
-        output_filename = build_stack_filename(self.output_dir, image_name, dims)
+        output_filename = build_stack_filename(self.output_dir, image_name, dims, z_mx_min_re)
+        print(f"[DEBUG output_filename:] {output_filename}")
 
         if self.dry_run:
             style_print("[DRY RUN ENABLED]", "info")

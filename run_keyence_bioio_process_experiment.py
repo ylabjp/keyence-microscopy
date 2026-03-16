@@ -16,7 +16,7 @@ import shutil
 
 from keyence_loader.bioio_keyence_builder import KeyenceBioioBuilder
 from ylabcommon.utils.utils import get_theme, style_print, progress_bar
-from ylabcommon.io.output_build_dir import build_output_dir_name
+from ylabcommon.utils.output_build_dir import build_output_dir_name
 from ylabcommon.utils.infile_experiment_loader import extract_zip_and_find_tiffs
 
 ##Before used
